@@ -32,21 +32,20 @@ photo at a public URL**, and **call a reverse-image API**. So it runs as one
 function, zero npm deps (Node 18+ has global fetch).
 
 ## 1. Keys
-- **SerpApi** (Google Lens engine): serpapi.com → copy your API key.
-  SearchApi.io is a drop-in alternative if you prefer.
-- **Supabase**: create a Storage bucket named `lens-temp` and mark it
-  **public**. Grab the project URL + `service_role` key from Settings → API.
-- **Anthropic** (optional): an API key turns on the modesty/budget re-rank.
+- **SerpApi** (Google Lens + Shopping): serpapi.com → copy your API key.
+- **imgbb** (hosts the snapped photo for a few minutes): api.imgbb.com → free key.
+  No Supabase needed. (Prefer in-platform? Swap imgbb for Vercel Blob.)
+- **Anthropic** (Layer-Up styling + optional re-rank): an API key.
+- **fal.ai** (`FAL_KEY`, virtual try-on, ~$0.075/image).
+- **ntfy**: just pick a long secret topic string (no account).
 
 ## 2. Deploy on Vercel
 1. Drop this folder in a git repo, import to Vercel.
 2. Settings → Environment Variables:
    ```
    SERPAPI_KEY=...
-   SUPABASE_URL=https://xxxx.supabase.co
-   SUPABASE_SERVICE_KEY=...           (service_role — server only, never ship to the browser)
-   SUPABASE_BUCKET=lens-temp
-   ANTHROPIC_KEY=...                  (optional)
+   IMGBB_KEY=...
+   ANTHROPIC_KEY=...
    MODESTY_RERANK=on                  (set "off" to skip the Claude pass)
    NTFY_TOPIC=d4ne-shahjahan-7f3k9q2x (long secret-ish string for phone push)
    FAL_KEY=...                        (fal.ai, for virtual try-on ~$0.075/img)
@@ -68,8 +67,7 @@ so this uses **ntfy** — a free push that's more reliable and carries links:
 
 ## How it works (per search)
 1. Frontend sends the photo as base64.
-2. Function uploads it to Supabase Storage → public URL, then **deletes it
-   after** (photos aren't kept).
+2. Function hosts it on imgbb (auto-expires in 10 min — no cleanup).
 3. Google Lens returns visual matches (title, source, price, thumbnail, link).
 4. Budget + in-stock filter, then optional Claude modesty re-rank.
 5. Frontend renders product cards with the real thumbnails.
