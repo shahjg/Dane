@@ -114,15 +114,41 @@
   .tabbar button.on{color:var(--ink)}
   .tabbar svg{width:21px;height:21px}
   .tabbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase}
-  /* closet */
-  .model{width:188px;aspect-ratio:3/4;margin:18px auto 6px;border-radius:18px;background:#f4f0ea center/cover no-repeat;box-shadow:0 26px 60px -30px rgba(0,0,0,.45)}
-  .model.empty{display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);color:var(--soft);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px}
-  .rack-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:12px}
-  .rack-item{aspect-ratio:4/5;background:#f4f0ea;border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .15s ease, box-shadow .2s ease;box-shadow:0 1px 2px rgba(0,0,0,.04)}
-  .rack-item:hover{box-shadow:0 18px 40px -24px rgba(0,0,0,.4)}
-  .rack-item:active{transform:scale(.97)}
-  .rack-item img{width:100%;height:100%;object-fit:contain;padding:16px;display:block;mix-blend-mode:multiply}
-  .closet-hint{text-align:center;color:var(--soft);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;margin:16px 0 4px}
+  /* dressing room */
+  .dr-stage{position:relative;width:100%;max-width:300px;margin:14px auto 0;aspect-ratio:3/4;border-radius:18px;overflow:hidden;background:#f4f0ea;box-shadow:0 26px 60px -30px rgba(0,0,0,.45)}
+  .dr-modelimg{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .35s ease}
+  .dr-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--soft);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px}
+  .dr-loading{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(20,18,16,.55);color:#fff;backdrop-filter:blur(2px)}
+  .dr-loading.on{display:flex}
+  .dr-loading span{font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+  .spin.light{border-color:rgba(255,255,255,.3);border-top-color:#fff}
+  .dr-reset{position:absolute;top:12px;right:12px;display:none;border:none;background:rgba(255,255,255,.92);color:var(--ink);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:999px;cursor:pointer}
+  .dr-reset.on{display:block}
+  .dr-models{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0 4px}
+  .dr-dot{position:relative;width:46px;height:60px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;background:#f4f0ea}
+  .dr-dot.sel{border-color:var(--ink)}
+  .dr-dot img{width:100%;height:100%;object-fit:cover}
+  .dr-dot .mini-x{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:10px;line-height:1;cursor:pointer}
+  .dr-add-model{width:46px;height:60px;border-radius:8px;border:1px dashed var(--line);background:none;color:var(--soft);font-size:20px;cursor:pointer}
+  .dr-look{display:flex;gap:10px;justify-content:center;margin:22px 0 14px}
+  .dr-slot{flex:1;max-width:96px;aspect-ratio:3/4;border-radius:12px;border:1px solid var(--line);background:#faf8f5;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .dr-slot .slot-label{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+  .dr-slot img{width:100%;height:100%;object-fit:contain;padding:8px;mix-blend-mode:multiply;animation:pop .25s ease}
+  .dr-slot .slot-x{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1;cursor:pointer}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  #dressMe{margin-top:2px}
+  .dr-note{text-align:center;color:var(--soft);font-size:11px;margin:8px 0 0;min-height:14px}
+  .dr-tabs{display:flex;gap:18px;overflow-x:auto;margin:24px 0 14px;padding-bottom:6px;scrollbar-width:none}
+  .dr-tabs::-webkit-scrollbar{display:none}
+  .dr-tab{white-space:nowrap;border:none;background:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);cursor:pointer;padding-bottom:6px;border-bottom:1.5px solid transparent;transition:color .15s,border-color .15s}
+  .dr-tab.on{color:var(--ink);border-color:var(--ink)}
+  .dr-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .dr-card{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;cursor:pointer;background:#f4f0ea;transition:transform .15s ease,box-shadow .2s ease;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .dr-card:active{transform:scale(.95)}
+  .dr-card img{width:100%;height:100%;object-fit:contain;padding:12px;mix-blend-mode:multiply}
+  .dr-card .c-add{position:absolute;bottom:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:15px;line-height:1;cursor:pointer}
+  .dr-card .c-x{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1;cursor:pointer}
+  .closet-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
   .closet-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
   .closet-bar .act{padding:11px 6px}
 
@@ -231,32 +257,30 @@
     <input type="file" id="boardPhoto" accept="image/*" hidden />
   </section>
 
-  <!-- CLOSET -->
+  <!-- CLOSET — dressing room -->
   <section id="closet" class="screen">
-    <div class="eyebrow">Your closet</div>
-    <div class="model" id="figure"></div>
-    <div class="closet-hint" id="closetHint">Tap a piece to try it on</div>
-    <div id="rack"></div>
+    <div class="dr-stage">
+      <img id="drModelImg" class="dr-modelimg" alt="">
+      <div class="dr-empty" id="drEmpty">Add a model photo to begin</div>
+      <div class="dr-loading" id="drLoading"><div class="spin light"></div><span id="drLoadTxt">Dressing…</span></div>
+      <button class="dr-reset" id="drReset">Reset</button>
+    </div>
+    <div class="dr-models" id="drModels"></div>
+
+    <div class="dr-look" id="drLook"></div>
+    <button class="btn block" id="dressMe">Dress me in this look</button>
+    <div class="dr-note" id="drNote"></div>
+
+    <div class="dr-tabs" id="drTabs"></div>
+    <div class="dr-grid" id="drGrid"></div>
+
     <div class="closet-bar">
-      <button class="act" id="addClothing">Clothing</button>
-      <button class="act" id="addPhoto">Photo</button>
-      <button class="act" id="switchModel">Switch</button>
+      <button class="act" id="addClothing">＋ Clothing</button>
+      <button class="act" id="addPhoto">＋ Model</button>
     </div>
     <input type="file" id="photoFile" accept="image/*" hidden />
     <input type="file" id="basicFile" accept="image/*" hidden />
   </section>
-
-  <!-- preview / dress overlay -->
-  <div id="preview" class="preview"><div class="preview-card">
-    <button id="prevClose" class="preview-x">&times;</button>
-    <div class="preview-stage" id="prevStage"><img id="prevImg" alt=""></div>
-    <div id="prevName" class="preview-name"></div>
-    <div class="preview-acts">
-      <button class="btn" id="prevTry">Try it on</button>
-      <a class="btn ghost" id="prevBuy" target="_blank" rel="noreferrer">View</a>
-      <button class="btn ghost" id="prevSend">Send</button>
-    </div>
-  </div></div>
 
   <footer>For you, always.</footer>
 </div>
@@ -416,7 +440,7 @@
       </div>`).join("") + tips;
   }
   document.body.addEventListener("click",(e)=>{ const f=e.target.closest("[data-find]"); if(!f)return;
-    $("#item").classList.remove("on"); $("#preview").classList.remove("on");
+    $("#item").classList.remove("on");
     goTo("browse"); $("#q").value=decodeURIComponent(f.dataset.find); browseCat=""; $("#browseTag").textContent=""; runShop($("#q").value, ""); });
 
   // ---------- BROWSE ----------
@@ -471,40 +495,126 @@
     if(m && !saves.find(s=>s.url===m.url && s.board===board)){ saves.unshift({...m, board}); store.set("d4ne_saves",saves); }
   }
 
-  // ---------- CLOSET (3D rail) ----------
-  let tryCache = store.get("d4ne_trycache", {});   // garmentSrc -> result image url
-  let prevGarment = null;
-  let ringItems = [];        // [{src, meta}]
-  let ringAngle = 0;
+  // ---------- CLOSET — dressing room ----------
+  let tryCache = store.get("d4ne_trycache", {});
+  let look = {};                 // category -> garment
+  let currentResult = null;      // dressed image url (null = base model)
+  let activeTab = "all";
+  const DR_TABS = [["all","All"],["tops","Tops"],["bottoms","Bottoms"],["dresses","Dresses"],["shoes","Shoes"],["outerwear","Outerwear"]];
+  const SLOT_ORDER = ["dresses","tops","bottoms","outerwear","shoes"];
+  const SLOT_LABEL = {tops:"Top",bottoms:"Bottom",dresses:"Dress",shoes:"Shoes",outerwear:"Layer"};
 
-  function closetGarments(){
-    return [
-      ...closet.map(c=>({src:c.src, meta:c.meta||{name:"Closet piece"}})),
-      ...basics.map(b=>({src:b.img, meta:{name:"My basic"}})),
-    ];
+  function catOf(m){
+    const s=((m.meta?.name||m.name||"")+" "+(m.meta?.brand||m.brand||"")).toLowerCase();
+    if(/dress|gown|abaya|kaftan|jumpsuit|romper|kurta|thobe|robe/.test(s)) return "dresses";
+    if(/shoe|heel|boot|sneaker|sandal|loafer|pump|trainer|footwear|flat\b/.test(s)) return "shoes";
+    if(/jean|trouser|pant|skirt|legging|short|culotte|cargo|bottom/.test(s)) return "bottoms";
+    if(/coat|jacket|blazer|cardigan|trench|parka|hoodie|outerwear|kimono/.test(s)) return "outerwear";
+    if(/top|blouse|shirt|tee|t-shirt|sweater|knit|cami|tank|tunic|bodysuit|hijab|scarf/.test(s)) return "tops";
+    return "other";
   }
-  function addToCloset(m){ if(!closet.find(c=>c.src===m.thumbnail)){ closet.unshift({src:m.thumbnail, meta:m}); store.set("d4ne_closet",closet); } }
-
-  function renderCloset(){
-    const fig = $("#figure");
-    if(myPhotos.length){ fig.classList.remove("empty"); fig.style.backgroundImage=`url("${myPhotos[selPhoto]}")`; fig.textContent=""; }
-    else { fig.classList.add("empty"); fig.style.backgroundImage="none"; fig.textContent="Add your photo"; }
-
-    ringItems = closetGarments();
-    const rack = $("#rack");
-    if(!ringItems.length){ rack.innerHTML=`<p class="note serif" style="text-align:center;margin-top:26px">Nothing hanging yet.</p>`; $("#closetHint").style.visibility="hidden"; return; }
-    $("#closetHint").style.visibility="visible";
-    rack.innerHTML = `<div class="rack-grid">`+ringItems.map((g,i)=>`<div class="rack-item" data-rack="${i}"><img src="${g.src}" alt=""></div>`).join("")+`</div>`;
-    rack.querySelectorAll("[data-rack]").forEach(el=> el.onclick=()=>openPreview(ringItems[+el.dataset.rack]));
-
-    if(pendingGarmentSrc){ const g=ringItems.find(x=>x.src===pendingGarmentSrc); pendingGarmentSrc=null; if(g) openPreview(g); }
+  function baseModel(){ const p=myPhotos[selPhoto]; return /^(https?:|data:)/.test(p)?p:new URL(p,location.href).href; }
+  function closetGarments(){ return [
+    ...closet.map(c=>({src:c.src, meta:c.meta||{name:"Closet piece"}})),
+    ...basics.map(b=>({src:b.img, meta:{name:b.label||"My piece"}})),
+  ]; }
+  function addToCloset(m){ if(!closet.find(c=>c.src===m.thumbnail)){ closet.unshift({src:m.thumbnail, meta:m}); store.set("d4ne_closet",closet);} }
+  function removeGarment(src){
+    closet=closet.filter(c=>c.src!==src); store.set("d4ne_closet",closet);
+    basics=basics.filter(b=>b.img!==src); store.set("d4ne_basics",basics);
+    for(const k in look){ if(look[k]?.src===src) delete look[k]; }
+    renderCloset();
   }
 
-  // add photo / clothing / switch model
-  $("#addPhoto").onclick=()=>$("#photoFile").click();
+  function renderCloset(){ renderStage(); renderModels(); renderLook(); renderTabs(); renderGrid(); }
+
+  function renderStage(){
+    const img=$("#drModelImg"), empty=$("#drEmpty");
+    if(!myPhotos.length){ empty.style.display="flex"; img.style.display="none"; $("#drReset").classList.remove("on"); return; }
+    empty.style.display="none"; img.style.display="block";
+    const src=currentResult||baseModel();
+    if(img.getAttribute("src")!==src){ img.style.opacity=0; img.onload=()=>{img.style.opacity=1;}; img.src=src; }
+    $("#drReset").classList.toggle("on", !!currentResult || Object.keys(look).length>0);
+  }
+  function renderModels(){
+    const wrap=$("#drModels");
+    wrap.innerHTML = myPhotos.map((p,i)=>`<div class="dr-dot ${i===selPhoto?'sel':''}" data-mi="${i}"><img src="${p}" alt="">${myPhotos.length>1?`<button class="mini-x" data-delmodel="${i}">&times;</button>`:''}</div>`).join("")
+      + `<button class="dr-add-model" id="drAddModel">&#43;</button>`;
+    wrap.querySelectorAll("[data-mi]").forEach(d=> d.onclick=(e)=>{ if(e.target.closest("[data-delmodel]")) return; selPhoto=+d.dataset.mi; currentResult=null; renderStage(); renderModels(); });
+    wrap.querySelectorAll("[data-delmodel]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const i=+b.dataset.delmodel; myPhotos.splice(i,1); store.set("d4ne_photos",myPhotos); if(selPhoto>=myPhotos.length) selPhoto=Math.max(0,myPhotos.length-1); currentResult=null; renderCloset(); });
+    $("#drAddModel").onclick=()=>$("#photoFile").click();
+  }
+  function renderLook(){
+    const slots = look.dresses ? ["dresses","shoes"] : ["tops","bottoms","shoes"];
+    $("#drLook").innerHTML = slots.map(cat=>{
+      const g=look[cat];
+      return `<div class="dr-slot" data-slot="${cat}">${g?`<img src="${g.src}" alt=""><button class="slot-x" data-clear="${cat}">&times;</button>`:`<span class="slot-label">${SLOT_LABEL[cat]}</span>`}</div>`;
+    }).join("");
+    $("#drLook").querySelectorAll("[data-clear]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); delete look[b.dataset.clear]; renderLook(); renderStage(); });
+    const n=Object.keys(look).length;
+    $("#dressMe").style.display = n? "block":"none";
+    $("#drNote").textContent = n>1? `${n} pieces · uses ${n} generations` : "";
+  }
+  function renderTabs(){
+    $("#drTabs").innerHTML = DR_TABS.map(([k,l])=>`<button class="dr-tab ${k===activeTab?'on':''}" data-tab="${k}">${l}</button>`).join("");
+    $("#drTabs").querySelectorAll("[data-tab]").forEach(b=> b.onclick=()=>{ activeTab=b.dataset.tab; renderTabs(); renderGrid(); });
+  }
+  function renderGrid(){
+    let items=closetGarments();
+    if(activeTab!=="all") items=items.filter(m=>catOf(m)===activeTab);
+    const grid=$("#drGrid");
+    if(!items.length){ grid.innerHTML=`<p class="note serif" style="grid-column:1/-1;text-align:center;margin-top:20px">${closetGarments().length? "Nothing in this category.":"Your wardrobe is empty. Add clothing, or save pieces from Browse."}</p>`; return; }
+    grid.innerHTML = items.map((m)=>`<div class="dr-card" data-try='${encodeURIComponent(JSON.stringify(m))}'>
+      <img src="${m.src}" alt="">
+      <button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button>
+      <button class="c-add" data-add='${encodeURIComponent(JSON.stringify(m))}'>&#43;</button>
+    </div>`).join("");
+    grid.querySelectorAll("[data-try]").forEach(c=> c.onclick=(e)=>{ if(e.target.closest("[data-rm]")||e.target.closest("[data-add]")) return; tryOnSingle(JSON.parse(decodeURIComponent(c.dataset.try))); });
+    grid.querySelectorAll("[data-add]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); addToLook(JSON.parse(decodeURIComponent(b.dataset.add))); });
+    grid.querySelectorAll("[data-rm]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); removeGarment(decodeURIComponent(b.dataset.rm)); });
+  }
+
+  function addToLook(m){
+    let cat=catOf(m); if(cat==="other") cat="tops";
+    if(cat==="dresses"){ delete look.tops; delete look.bottoms; }
+    if(cat==="tops"||cat==="bottoms"){ delete look.dresses; }
+    look[cat]=m; renderLook(); renderStage();
+  }
+  function setLoading(on,txt){ $("#drLoading").classList.toggle("on",on); if(txt) $("#drLoadTxt").textContent=txt; }
+
+  async function runTryon(person, garment){
+    const key=person+"|"+garment;
+    if(tryCache[key]) return tryCache[key];
+    const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({personImage:person,garmentImage:garment})});
+    const d=await r.json();
+    if(!r.ok||d.error||!d.image){ throw new Error(d?.error || (r.status===504?"Timed out — try again.":`Error ${r.status}`)); }
+    tryCache[key]=d.image; store.set("d4ne_trycache",tryCache); return d.image;
+  }
+  async function tryOnSingle(m){
+    if(!myPhotos.length){ $("#drNote").textContent="Add a model photo first."; return; }
+    setLoading(true,"Dressing you… ~15s");
+    try{ currentResult=await runTryon(baseModel(), m.src); renderStage(); $("#drNote").textContent=""; }
+    catch(err){ $("#drNote").textContent=(""+err.message).slice(0,80); }
+    finally{ setLoading(false); }
+  }
+  $("#dressMe").onclick=async ()=>{
+    if(!myPhotos.length){ $("#drNote").textContent="Add a model photo first."; return; }
+    const order=SLOT_ORDER.filter(c=>look[c]).map(c=>look[c]);
+    if(!order.length) return;
+    setLoading(true,"Building your look…");
+    try{
+      let img=baseModel();
+      for(let i=0;i<order.length;i++){ setLoading(true,`Adding ${SLOT_LABEL[catOf(order[i])]||"piece"}… (${i+1}/${order.length})`); img=await runTryon(img, order[i].src); }
+      currentResult=img; renderStage(); $("#drNote").textContent="Your look ✓";
+    }catch(err){ $("#drNote").textContent=(""+err.message).slice(0,80); }
+    finally{ setLoading(false); }
+  };
+  $("#drReset").onclick=()=>{ currentResult=null; look={}; renderLook(); renderStage(); };
+
+  // uploads
   $("#addClothing").onclick=()=>$("#basicFile").click();
-  $("#switchModel").onclick=()=>{ if(myPhotos.length>1){ selPhoto=(selPhoto+1)%myPhotos.length; renderCloset(); } };
-  $("#photoFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;myPhotos.push(d);store.set("d4ne_photos",myPhotos);selPhoto=myPhotos.length-1;renderCloset();});};
+  $("#addPhoto").onclick=()=>$("#photoFile").click();
+  $("#photoFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;myPhotos.push(d);store.set("d4ne_photos",myPhotos);selPhoto=myPhotos.length-1;currentResult=null;renderCloset();});};
   $("#basicFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;basics.push({img:d,label:""});store.set("d4ne_basics",basics);renderCloset();});};
   $("#boardPhoto").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return; if(openBoard){ saves.unshift({name:"My photo",thumbnail:d,url:"",board:openBoard}); store.set("d4ne_saves",saves); renderSaved(); } e.target.value=""; });};
 
@@ -514,43 +624,6 @@
     e.stopPropagation(); const o=JSON.parse(decodeURIComponent(u.dataset.unsave));
     saves = saves.filter(s=>!(s.url===o.url && s.board===o.board)); store.set("d4ne_saves",saves); renderSaved();
   });
-
-  // ---------- preview + dress ----------
-  function openPreview(g){
-    prevGarment=g; const cached=tryCache[g.src];
-    $("#prevImg").src = cached || g.src;
-    $("#prevName").textContent = g.meta?.name || "Piece";
-    const buy=$("#prevBuy"); if(g.meta?.url){ buy.style.display=""; buy.href=g.meta.url; } else buy.style.display="none";
-    $("#prevTry").textContent = cached ? "On you ✓ — redo" : "Try it on";
-    $("#preview").classList.add("on");
-  }
-  $("#prevClose").onclick=()=>$("#preview").classList.remove("on");
-  $("#prevSend").onclick=()=>{ if(prevGarment?.meta) sendToPhone(prevGarment.meta, null); };
-  $("#prevTry").onclick=()=>doTryOn(prevGarment);
-
-  async function doTryOn(g){
-    if(!g) return;
-    if(!myPhotos.length){ $("#prevName").textContent="Add a photo of yourself first."; return; }
-    const btn=$("#prevTry"); btn.disabled=true; btn.textContent="Dressing you… ~15s";
-    $("#prevStage").innerHTML=`<div class="note" style="margin:0"><div class="spin"></div><div class="serif">Putting it on you…</div></div>`;
-    try{
-      const person = /^(https?:|data:)/.test(myPhotos[selPhoto]) ? myPhotos[selPhoto] : new URL(myPhotos[selPhoto], location.href).href;
-      const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({personImage:person,garmentImage:g.src})});
-      const d=await r.json();
-      if(!r.ok||d.error||!d.image){
-        const why = d?.error || (r.status===504||r.status===408 ? "Timed out — the model took too long." : `Error ${r.status}`);
-        throw new Error(why);
-      }
-      tryCache[g.src]=d.image; store.set("d4ne_trycache",tryCache);
-      $("#prevStage").innerHTML=`<img id="prevImg" src="${d.image}" alt="">`;
-      btn.textContent="On you ✓ — redo";
-    }catch(err){
-      $("#prevStage").innerHTML=`<img id="prevImg" src="${g.src}" alt="">`;
-      $("#prevName").textContent = (""+err.message).slice(0,90) || "Try-on didn't work — try again.";
-      btn.textContent="Try again";
-    } finally { btn.disabled=false; }
-  }
 
 
 
