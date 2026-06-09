@@ -114,6 +114,52 @@
   .tabbar button.on{color:var(--ink)}
   .tabbar svg{width:21px;height:21px}
   .tabbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+  /* 3D closet */
+  .stage{position:relative;height:440px;margin-top:8px;perspective:1100px;overflow:hidden;border-bottom:1px solid var(--line)}
+  .figure{position:absolute;left:50%;top:52%;width:170px;height:300px;transform:translate(-50%,-50%);z-index:2;
+    border-radius:3px;background:var(--paper) center/cover no-repeat;box-shadow:0 30px 60px -34px rgba(0,0,0,.5);transition:opacity .3s}
+  .figure.empty{display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);color:var(--soft);font-size:12px;text-align:center;padding:14px}
+  .ring{position:absolute;left:0;right:0;top:0;bottom:0;transform-style:preserve-3d;will-change:transform}
+  .card3d{position:absolute;left:50%;top:50%;width:120px;height:168px;margin:-84px 0 0 -60px;
+    background:#fff center/cover no-repeat;border:1px solid var(--line);border-radius:3px;
+    box-shadow:0 16px 34px -20px rgba(0,0,0,.4);cursor:pointer;backface-visibility:hidden;overflow:hidden}
+  .card3d::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .2s}
+  .stage-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;
+    color:var(--soft);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;padding:30px}
+  .closet-hint{text-align:center;color:var(--soft);font-size:11px;letter-spacing:.06em;margin-top:12px}
+  .closet-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+  .closet-bar .act{padding:11px 6px}
+
+  /* preview overlay */
+  .preview{position:fixed;inset:0;z-index:85;background:rgba(255,255,255,.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .preview.on{display:flex}
+  .preview-card{width:100%;max-width:420px;text-align:center}
+  .preview-x{position:absolute;top:calc(16px + env(safe-area-inset-top));right:18px;border:none;background:none;font-size:30px;cursor:pointer;color:var(--ink);line-height:1}
+  .preview-stage{width:100%;aspect-ratio:3/4;background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .preview-stage img{width:100%;height:100%;object-fit:contain}
+  .preview-name{font-family:'Cormorant Garamond',serif;font-size:21px;margin:16px 0 4px;line-height:1.2}
+  .preview-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px}
+  .preview-acts .btn{padding:13px 6px;font-size:10.5px}
+  .pcard{position:relative}
+  .card-x{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;cursor:pointer;z-index:2}
+  .browse-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+  .browse-head .act{max-width:120px;margin-bottom:2px}
+  .browse-tag{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-top:10px;min-height:14px}
+  .chips-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+  .board-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+  .board-tile{cursor:pointer}
+  .board-cover{aspect-ratio:1/1;background:var(--paper) center/cover no-repeat;border:1px solid var(--line);border-radius:4px}
+  .board-cover.plus{display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--soft);border-style:dashed}
+  .board-meta{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px}
+  .board-name{font-family:'Cormorant Garamond',serif;font-size:18px}
+  .board-count{font-size:11px;color:var(--soft)}
+  .linkback{border:none;background:none;color:var(--ink);font-size:12px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:8px 0;display:block}
+  .board-pick-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:200px;overflow:auto}
+  .board-pick{text-align:left;border:1px solid var(--line);background:#fff;border-radius:2px;padding:12px 14px;font-family:'Jost',sans-serif;font-size:14px;cursor:pointer}
+  .item-acts{grid-template-columns:1fr 1fr 1fr}
+  .item-out{margin-top:10px;width:100%}
+  #item{align-items:flex-start;overflow-y:auto}
+  #item .preview-card{margin:56px auto 50px;max-width:480px}
   .sheet{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
   .sheet.on{display:flex}
   .sheet-card{background:#fff;width:100%;max-width:680px;border-radius:14px 14px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
@@ -160,51 +206,76 @@
 
   <!-- BROWSE -->
   <section id="browse" class="screen">
-    <div class="eyebrow">Browse</div>
-    <div class="searchbar"><input id="q" placeholder="Search anything — &#34;beige slip dress&#34;" /><button class="btn" id="qgo">Search</button></div>
-    <div class="chips" id="cats">
-      <button class="chip on" data-q="">For you</button>
-      <button class="chip" data-q="modest slip dress">Slip dresses</button>
-      <button class="chip" data-q="modest maxi dress">Maxi</button>
-      <button class="chip" data-q="long sleeve midi dress modest">Long sleeve</button>
-      <button class="chip" data-q="linen abaya">Abayas</button>
-      <button class="chip" data-q="modest blouse top women">Tops</button>
-      <button class="chip" data-q="oversized blazer women">Blazers</button>
-      <button class="chip" data-q="wide leg trousers women">Trousers</button>
-      <button class="chip" data-q="modest knit sweater women">Knits</button>
-      <button class="chip" data-q="modest maxi skirt">Skirts</button>
-      <button class="chip" data-q="modest co ord set women">Co-ords</button>
-      <button class="chip" data-q="modest cardigan women">Cardigans</button>
-      <button class="chip" data-q="modest jumpsuit women">Jumpsuits</button>
+    <div class="browse-head">
+      <div class="eyebrow" style="margin:34px 0 0">Browse</div>
+      <button class="act" id="filterBtn">Filter</button>
     </div>
+    <div class="searchbar"><input id="q" placeholder="Search anything — rings, a sofa, a maxi dress&#8230;" /><button class="btn" id="qgo">Search</button></div>
+    <div id="browseTag" class="browse-tag"></div>
     <div id="browseOut"></div>
   </section>
 
   <!-- SAVED -->
   <section id="saved" class="screen">
-    <div class="eyebrow">Saved</div>
+    <div class="eyebrow">Your boards</div>
     <div id="savedOut"></div>
   </section>
 
-  <!-- CLOSET / TRY-ON -->
+  <!-- CLOSET (3D rail) -->
   <section id="closet" class="screen">
-    <div class="eyebrow">My photos</div>
-    <p class="note serif" style="margin-top:0;text-align:left;color:var(--soft)">Add a few clear, front-facing full-body photos. Try-on uses these.</p>
-    <div class="thumbs" id="myPhotos"></div>
+    <div class="eyebrow">Your closet</div>
+    <div class="stage" id="stage">
+      <div class="figure" id="figure"></div>
+      <div class="ring" id="ring"></div>
+      <div class="stage-empty" id="stageEmpty"></div>
+    </div>
+    <div class="closet-hint" id="closetHint">Drag to spin · tap a piece to preview</div>
+    <div class="closet-bar">
+      <button class="act" id="addClothing">＋ Clothing</button>
+      <button class="act" id="addPhoto">＋ Your photo</button>
+      <button class="act" id="switchModel">Switch model</button>
+    </div>
     <input type="file" id="photoFile" accept="image/*" hidden />
-
-    <div class="eyebrow">My basics closet</div>
-    <p class="note serif" style="margin-top:0;text-align:left;color:var(--soft)">Add staples you own (camis, turtlenecks, blazers). Styling uses these first.</p>
-    <div class="thumbs" id="basics"></div>
     <input type="file" id="basicFile" accept="image/*" hidden />
-
-    <div class="eyebrow">Try it on</div>
-    <p class="note serif" style="margin-top:0;text-align:left;color:var(--soft)">Pick one of your photos, then tap &#34;Try on&#34; on any saved piece.</p>
-    <div class="tryout" id="tryout"><span class="note serif">Your try-on will appear here.</span></div>
   </section>
+
+  <!-- preview / dress overlay -->
+  <div id="preview" class="preview"><div class="preview-card">
+    <button id="prevClose" class="preview-x">&times;</button>
+    <div class="preview-stage" id="prevStage"><img id="prevImg" alt=""></div>
+    <div id="prevName" class="preview-name"></div>
+    <div class="preview-acts">
+      <button class="btn" id="prevTry">Try it on</button>
+      <a class="btn ghost" id="prevBuy" target="_blank" rel="noreferrer">View</a>
+      <button class="btn ghost" id="prevSend">Send</button>
+    </div>
+  </div></div>
 
   <footer>For you, always.</footer>
 </div>
+
+<div id="item" class="preview"><div class="preview-card">
+  <button id="itemClose" class="preview-x">&times;</button>
+  <div class="preview-stage"><img id="itemImg" alt=""></div>
+  <div id="itemBrand" class="brand" style="margin-top:12px;text-align:center"></div>
+  <div id="itemName" class="preview-name"></div>
+  <div id="itemPrice" class="price" style="text-align:center"></div>
+  <div class="preview-acts item-acts" id="itemActs"></div>
+  <div id="itemOut" class="item-out"></div>
+</div></div>
+
+<div id="boardPick" class="sheet"><div class="sheet-card">
+  <div class="sheet-t" id="bpTitle">Save to board</div>
+  <div id="boardList" class="board-pick-list"></div>
+  <input id="newBoard" placeholder="+ New board name" />
+  <div class="sheet-acts"><button class="btn ghost" id="bpCancel">Cancel</button><button class="btn" id="bpCreate">Create &amp; save</button></div>
+</div></div>
+
+<div id="filter" class="sheet"><div class="sheet-card">
+  <div class="sheet-t">Filter by</div>
+  <div id="filterCats" class="chips-wrap"></div>
+  <div class="sheet-acts"><button class="btn ghost" id="fClose">Close</button></div>
+</div></div>
 
 <div id="sheet" class="sheet"><div class="sheet-card">
   <div class="sheet-t">Send to Shahjahan</div>
@@ -215,7 +286,7 @@
 <nav class="tabbar">
   <button data-go="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Home</span></button>
   <button data-go="browse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg><span>Browse</span></button>
-  <button data-go="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Saved</span></button>
+  <button data-go="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Boards</span></button>
   <button data-go="closet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M12 7c-1 2-7 5-9 8h18c-2-3-8-6-9-8z"/></svg><span>Closet</span></button>
 </nav>
 
@@ -232,9 +303,13 @@
   };
   const mem = {};
   let saves = store.get("d4ne_saves", []);
+  let boards = store.get("d4ne_boards", ["Wishlist"]);
+  let closet = store.get("d4ne_closet", []);
+  let openBoard = null, curItem = null, curSaveItem = null, browseCat = "";
   let myPhotos = store.get("d4ne_photos", []);
   let basics = store.get("d4ne_basics", []);
   let selPhoto = 0;
+  let selGarmentIdx = -1, garmentList = [], pendingGarmentSrc = null;
 
   // ---------- splash ----------
   function hideSplash(){ const s=$("#splash"); if(!s)return; s.classList.add("hide"); setTimeout(()=>s.remove(),650); }
@@ -248,9 +323,9 @@
       document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active", s.id===id));
       document.querySelectorAll(".tabbar button").forEach(x=>x.classList.toggle("on", x===b));
       window.scrollTo({top:0,behavior:"smooth"});
-      if(id==="saved") renderSaved();
+      if(id==="saved"){ openBoard=null; renderSaved(); }
       if(id==="closet") renderCloset();
-      if(id==="browse" && !$("#browseOut").innerHTML) runShop("");
+      if(id==="browse" && !$("#browseOut").innerHTML) runShop("", browseCat);
     };
   });
   function goTo(id){ document.querySelector(`.tabbar button[data-go="${id}"]`).click(); }
@@ -266,27 +341,23 @@
   }
   const b64 = (dataUrl)=> dataUrl.split(",")[1];
 
-  // ---------- product card ----------
+  // ---------- product card (whole card opens the item sheet) ----------
   function card(m){
-    const brand = m.brand || m.source || "";
-    return `<div class="pcard">
-      ${m.thumbnail?`<a href="${m.url}" target="_blank" rel="noreferrer"><img class="ph" src="${m.thumbnail}" alt=""></a>`:`<div class="ph"></div>`}
-      <div class="brand">${brand}</div>
+    return `<div class="pcard" data-item='${encodeURIComponent(JSON.stringify(m))}'>
+      ${m.thumbnail?`<img class="ph" src="${m.thumbnail}" alt="">`:`<div class="ph"></div>`}
+      <div class="brand">${m.brand||m.source||""}</div>
       <div class="pname">${m.name||"Item"}</div>
       <div class="price">${m.price||""}</div>
-      <div class="acts">
-        <button class="mini" data-save='${encodeURIComponent(JSON.stringify(m))}'>Save</button>
-        <button class="mini" data-send='${encodeURIComponent(JSON.stringify(m))}'>Send</button>
-      </div>
+      ${m._board?`<button class="card-x" data-unsave='${encodeURIComponent(JSON.stringify({url:m.url,board:m._board}))}'>&times;</button>`:''}
     </div>`;
   }
   function grid(items){ return `<div class="grid">${items.map(card).join("")}</div>`; }
+  function isClothing(m){ return /dress|top|blouse|skirt|abaya|kurta|thobe|trouser|pant|jean|blazer|cardigan|sweater|knit|coat|jacket|shirt|jumpsuit|gown|hijab|scarf|tunic|co-?ord| set|romper|kaftan|kimono|maxi|midi/i.test(((m.name||"")+" "+(m.brand||""))); }
 
-  // delegated actions for save/send across all grids
-  document.body.addEventListener("click", (e)=>{
-    const sv=e.target.closest("[data-save]"); const sd=e.target.closest("[data-send]");
-    if(sv){ const m=JSON.parse(decodeURIComponent(sv.dataset.save)); addSave(m); sv.textContent="Saved \u2713"; sv.classList.add("on"); }
-    if(sd){ const m=JSON.parse(decodeURIComponent(sd.dataset.send)); sendToPhone(m, sd); }
+  document.body.addEventListener("click",(e)=>{
+    const c=e.target.closest(".pcard[data-item]"); if(!c) return;
+    if(e.target.closest("[data-unsave]")) return;
+    openItem(JSON.parse(decodeURIComponent(c.dataset.item)));
   });
 
   // ---------- HOME: find ----------
@@ -335,75 +406,223 @@
       </div>`).join("") + tips;
   }
   document.body.addEventListener("click",(e)=>{ const f=e.target.closest("[data-find]"); if(!f)return;
-    goTo("browse"); $("#q").value=decodeURIComponent(f.dataset.find); runShop($("#q").value); });
+    $("#item").classList.remove("on"); $("#preview").classList.remove("on");
+    goTo("browse"); $("#q").value=decodeURIComponent(f.dataset.find); browseCat=""; $("#browseTag").textContent=""; runShop($("#q").value, ""); });
 
   // ---------- BROWSE ----------
-  $("#qgo").onclick=()=>runShop($("#q").value);
-  $("#q").addEventListener("keydown",e=>{ if(e.key==="Enter") runShop($("#q").value); });
-  document.querySelectorAll("#cats .chip").forEach(c=> c.onclick=()=>{
-    document.querySelectorAll("#cats .chip").forEach(x=>x.classList.toggle("on",x===c)); runShop(c.dataset.q);
-  });
-  async function runShop(q){
+  const FILTER_CATS = ["All","Clothing","Jewelry","Shoes","Bags","Home & decor","Furniture","Cars","Rings","Watches","Beauty"];
+  $("#qgo").onclick=()=>runShop($("#q").value, browseCat);
+  $("#q").addEventListener("keydown",e=>{ if(e.key==="Enter") runShop($("#q").value, browseCat); });
+  $("#filterBtn").onclick=()=>openFilter();
+  function openFilter(){
+    $("#filterCats").innerHTML = FILTER_CATS.map(c=>`<button class="chip ${(c==="All"?!browseCat:browseCat===c)?'on':''}" data-fc="${c==="All"?"":c}">${c}</button>`).join("");
+    $("#filterCats").querySelectorAll("[data-fc]").forEach(b=> b.onclick=()=>{ browseCat=b.dataset.fc; $("#filter").classList.remove("on"); $("#browseTag").textContent = browseCat? browseCat : ""; runShop($("#q").value, browseCat); });
+    $("#filter").classList.add("on");
+  }
+  $("#fClose").onclick=()=>$("#filter").classList.remove("on");
+  async function runShop(q, category){
     $("#browseOut").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Finding pieces\u2026</div></div>`;
     try{
-      const r=await fetch(API.shop,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q})});
+      const r=await fetch(API.shop,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q||"", category:category||""})});
       const d=await r.json(); if(!r.ok||d.error) throw 0;
       $("#browseOut").innerHTML = (d.items&&d.items.length)? grid(d.items) : `<p class="note serif">Nothing here yet \u2014 try another search.</p>`;
     }catch(_){ $("#browseOut").innerHTML=`<p class="note serif" style="font-size:15px">Browse goes live once the app is deployed with its search key.</p>`; }
   }
 
-  // ---------- SAVED ----------
-  function addSave(m){ if(!saves.find(s=>s.url===m.url)){ saves.unshift(m); store.set("d4ne_saves",saves); } }
+  // ---------- BOARDS (saved) ----------
   function renderSaved(){
-    if(!saves.length){ $("#savedOut").innerHTML=`<p class="note serif">Nothing saved yet. Tap &#34;Save&#34; on anything you love.</p>`; return; }
-    $("#savedOut").innerHTML = `<div class="grid">${saves.map((m,i)=>`
-      <div class="pcard">
-        ${m.thumbnail?`<a href="${m.url}" target="_blank" rel="noreferrer"><img class="ph" src="${m.thumbnail}"></a>`:`<div class="ph"></div>`}
-        <div class="brand">${m.brand||m.source||""}</div>
-        <div class="pname">${m.name||"Item"}</div>
-        <div class="price">${m.price||""}</div>
-        <div class="acts">
-          <button class="mini" data-tryon="${i}">Try on</button>
-          <button class="mini" data-send='${encodeURIComponent(JSON.stringify(m))}'>Send</button>
-          <button class="mini" data-remove="${i}">Remove</button>
-        </div>
-      </div>`).join("")}</div>`;
+    const out=$("#savedOut");
+    if(openBoard){ return renderBoardView(openBoard); }
+    let html = `<div class="board-grid">`;
+    boards.forEach(b=>{
+      const items=saves.filter(s=>s.board===b);
+      const cover=items[0]?.thumbnail;
+      html += `<div class="board-tile" data-board="${b}">
+        <div class="board-cover" style="${cover?`background-image:url('${cover}')`:''}"></div>
+        <div class="board-meta"><span class="board-name">${b}</span><span class="board-count">${items.length}</span></div>
+      </div>`;
+    });
+    html += `<div class="board-tile" id="newBoardTile"><div class="board-cover plus">&#43;</div><div class="board-meta"><span class="board-name">New board</span></div></div></div>`;
+    out.innerHTML = html;
+    out.querySelectorAll("[data-board]").forEach(t=> t.onclick=()=>{ openBoard=t.dataset.board; renderSaved(); });
+    $("#newBoardTile").onclick=()=>openBoardPicker(null);
   }
-  document.body.addEventListener("click",(e)=>{
-    const rm=e.target.closest("[data-remove]"); const to=e.target.closest("[data-tryon]");
-    if(rm){ saves.splice(+rm.dataset.remove,1); store.set("d4ne_saves",saves); renderSaved(); }
-    if(to){ const m=saves[+to.dataset.tryon]; goTo("closet"); doTryOn(m); }
-  });
+  function renderBoardView(b){
+    const items=saves.filter(s=>s.board===b);
+    $("#savedOut").innerHTML = `<button class="linkback" id="boardBack">&#8592; Boards</button>
+      <div class="eyebrow" style="margin:10px 0 4px">${b}</div>` +
+      (items.length? grid(items.map(m=>({...m,_board:b}))) : `<p class="note serif">Empty board. Save something into it from Browse or Home.</p>`);
+    $("#boardBack").onclick=()=>{ openBoard=null; renderSaved(); };
+  }
+  function saveToBoard(m, board){
+    if(!board) return;
+    if(!boards.includes(board)){ boards.push(board); store.set("d4ne_boards",boards); }
+    if(m && !saves.find(s=>s.url===m.url && s.board===board)){ saves.unshift({...m, board}); store.set("d4ne_saves",saves); }
+  }
 
-  // ---------- CLOSET ----------
+  // ---------- CLOSET (3D rail) ----------
+  let tryCache = store.get("d4ne_trycache", {});   // garmentSrc -> result image url
+  let prevGarment = null;
+  let ringItems = [];        // [{src, meta}]
+  let ringAngle = 0;
+
+  function closetGarments(){
+    return [
+      ...closet.map(c=>({src:c.src, meta:c.meta||{name:"Closet piece"}})),
+      ...basics.map(b=>({src:b.img, meta:{name:"My basic"}})),
+    ];
+  }
+  function addToCloset(m){ if(!closet.find(c=>c.src===m.thumbnail)){ closet.unshift({src:m.thumbnail, meta:m}); store.set("d4ne_closet",closet); } }
+
   function renderCloset(){
-    $("#myPhotos").innerHTML = myPhotos.map((p,i)=>`<div class="thumb ${i===selPhoto?'sel':''}" data-photo="${i}"><img src="${p}"><div class="x" data-delp="${i}">&times;</div></div>`).join("")
-      + `<div class="thumb add" id="addPhoto">&#43;</div>`;
-    $("#basics").innerHTML = basics.map((b,i)=>`<div class="thumb"><img src="${b.img}"><div class="x" data-delb="${i}">&times;</div></div>`).join("")
-      + `<div class="thumb add" id="addBasic">&#43;</div>`;
-    $("#addPhoto").onclick=()=>$("#photoFile").click();
-    $("#addBasic").onclick=()=>$("#basicFile").click();
+    // center figure = her selected photo (or dressed result if cached & chosen)
+    const fig = $("#figure");
+    if(myPhotos.length){ fig.classList.remove("empty"); fig.style.backgroundImage=`url("${myPhotos[selPhoto]}")`; fig.textContent=""; }
+    else { fig.classList.add("empty"); fig.style.backgroundImage="none"; fig.textContent="Add a photo of yourself to stand in your closet"; }
+
+    ringItems = closetGarments();
+    const ring = $("#ring");
+    if(!ringItems.length){ ring.innerHTML=""; $("#stageEmpty").style.display="flex"; $("#stageEmpty").textContent="Your rail is empty. Add clothing or save pieces from Browse."; $("#closetHint").style.visibility="hidden"; return; }
+    $("#stageEmpty").style.display="none"; $("#closetHint").style.visibility="visible";
+
+    const n = ringItems.length;
+    const radius = Math.max(220, Math.round(n*30));
+    ring.innerHTML = ringItems.map((g,i)=>{
+      const theta = i*(360/n);
+      return `<div class="card3d" data-card="${i}" style="transform:rotateY(${theta}deg) translateZ(${radius}px);background-image:url('${g.src}')"></div>`;
+    }).join("");
+    ring.dataset.radius = radius;
+    spin(ringAngle);
+
+    // if we arrived here to dress a specific saved piece, open it
+    if(pendingGarmentSrc){ const g=ringItems.find(x=>x.src===pendingGarmentSrc); pendingGarmentSrc=null; if(g) openPreview(g); }
   }
-  $("#photoFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;myPhotos.push(d);store.set("d4ne_photos",myPhotos);renderCloset();});};
+  function spin(angle){ ringAngle=angle; const r=$("#ring"); if(r) r.style.transform=`translateZ(-${r.dataset.radius||300}px) rotateY(${angle}deg)`; }
+
+  // drag to spin
+  (function(){
+    const stage=$("#stage"); let down=false, startX=0, startAngle=0, moved=0;
+    const xy=(e)=> (e.touches? e.touches[0].clientX : e.clientX);
+    stage.addEventListener("pointerdown",(e)=>{ down=true; startX=xy(e); startAngle=ringAngle; moved=0; });
+    window.addEventListener("pointermove",(e)=>{ if(!down)return; const dx=xy(e)-startX; moved=Math.max(moved,Math.abs(dx)); spin(startAngle + dx*0.4); });
+    window.addEventListener("pointerup",(e)=>{ if(!down)return; down=false;
+      const t=e.target.closest("[data-card]");
+      if(t && moved<8){ const g=ringItems[+t.dataset.card]; if(g) openPreview(g); }   // tap, not drag
+    });
+  })();
+
+  // add photo / clothing / switch model
+  $("#addPhoto").onclick=()=>$("#photoFile").click();
+  $("#addClothing").onclick=()=>$("#basicFile").click();
+  $("#switchModel").onclick=()=>{ if(myPhotos.length>1){ selPhoto=(selPhoto+1)%myPhotos.length; renderCloset(); } };
+  $("#photoFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;myPhotos.push(d);store.set("d4ne_photos",myPhotos);selPhoto=myPhotos.length-1;renderCloset();});};
   $("#basicFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;basics.push({img:d,label:""});store.set("d4ne_basics",basics);renderCloset();});};
+
+  // remove a piece from a board
   document.body.addEventListener("click",(e)=>{
-    const sp=e.target.closest("[data-photo]"); const dp=e.target.closest("[data-delp]"); const db=e.target.closest("[data-delb]");
-    if(dp){ e.stopPropagation(); myPhotos.splice(+dp.dataset.delp,1); store.set("d4ne_photos",myPhotos); selPhoto=0; renderCloset(); return; }
-    if(db){ e.stopPropagation(); basics.splice(+db.dataset.delb,1); store.set("d4ne_basics",basics); renderCloset(); return; }
-    if(sp){ selPhoto=+sp.dataset.photo; renderCloset(); }
+    const u=e.target.closest("[data-unsave]"); if(!u) return;
+    e.stopPropagation(); const o=JSON.parse(decodeURIComponent(u.dataset.unsave));
+    saves = saves.filter(s=>!(s.url===o.url && s.board===o.board)); store.set("d4ne_saves",saves); renderSaved();
   });
 
-  async function doTryOn(m){
-    if(!myPhotos.length){ $("#tryout").innerHTML=`<span class="note serif">Add a photo of yourself first (above).</span>`; return; }
-    if(!m||!m.thumbnail){ $("#tryout").innerHTML=`<span class="note serif">This piece has no usable image.</span>`; return; }
-    $("#tryout").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Putting it on you\u2026</div></div>`;
+  // ---------- preview + dress ----------
+  function openPreview(g){
+    prevGarment=g; const cached=tryCache[g.src];
+    $("#prevImg").src = cached || g.src;
+    $("#prevName").textContent = g.meta?.name || "Piece";
+    const buy=$("#prevBuy"); if(g.meta?.url){ buy.style.display=""; buy.href=g.meta.url; } else buy.style.display="none";
+    $("#prevTry").textContent = cached ? "On you ✓ — redo" : "Try it on";
+    $("#preview").classList.add("on");
+  }
+  $("#prevClose").onclick=()=>$("#preview").classList.remove("on");
+  $("#prevSend").onclick=()=>{ if(prevGarment?.meta) sendToPhone(prevGarment.meta, null); };
+  $("#prevTry").onclick=()=>doTryOn(prevGarment);
+
+  async function doTryOn(g){
+    if(!g) return;
+    if(!myPhotos.length){ $("#prevName").textContent="Add a photo of yourself first."; return; }
+    const btn=$("#prevTry"); btn.disabled=true; btn.textContent="Dressing you… ~15s";
+    $("#prevStage").innerHTML=`<div class="note" style="margin:0"><div class="spin"></div><div class="serif">Putting it on you…</div></div>`;
     try{
       const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({personImage:myPhotos[selPhoto],garmentImage:m.thumbnail})});
+        body:JSON.stringify({personImage:myPhotos[selPhoto],garmentImage:g.src})});
       const d=await r.json(); if(!r.ok||d.error||!d.image) throw 0;
-      $("#tryout").innerHTML=`<img src="${d.image}" alt="">`;
-    }catch(_){ $("#tryout").innerHTML=`<span class="note serif">Try-on runs once the app is deployed with its key.</span>`; }
+      tryCache[g.src]=d.image; store.set("d4ne_trycache",tryCache);
+      $("#prevStage").innerHTML=`<img id="prevImg" src="${d.image}" alt="">`;
+      btn.textContent="On you ✓ — redo";
+    }catch(_){
+      $("#prevStage").innerHTML=`<img id="prevImg" src="${g.src}" alt="">`;
+      $("#prevName").textContent="Try-on needs the FAL_KEY in Vercel.";
+      btn.textContent="Try it on";
+    } finally { btn.disabled=false; }
   }
+
+
+
+  // ---------- item detail sheet ----------
+  function openItem(m){
+    curItem=m;
+    $("#itemImg").src=m.thumbnail||"";
+    $("#itemBrand").textContent=m.brand||m.source||"";
+    $("#itemName").textContent=m.name||"Item";
+    $("#itemPrice").textContent=m.price||"";
+    $("#itemOut").innerHTML="";
+    const cloth=isClothing(m);
+    $("#itemActs").innerHTML =
+      `<a class="btn ghost" href="${m.url||'#'}" target="_blank" rel="noreferrer">View</a>`+
+      `<button class="btn" id="iSave">Save</button>`+
+      `<button class="btn ghost" id="iCheap">Find cheaper</button>`+
+      (cloth?`<button class="btn ghost" id="iStyle">Style it</button>`:``)+
+      `<button class="btn ghost" id="iSend">Send to me</button>`+
+      (cloth?`<button class="btn ghost" id="iCloset">To closet</button>`:``);
+    $("#iSave").onclick=()=>openBoardPicker(m);
+    $("#iCheap").onclick=()=>findCheaper(m);
+    $("#iSend").onclick=()=>sendToPhone(m,null);
+    if(cloth){
+      $("#iStyle").onclick=()=>styleItem(m);
+      $("#iCloset").onclick=()=>{ addToCloset(m); $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Added to your closet rail \u2713</p>`; };
+    }
+    $("#item").classList.add("on");
+  }
+  $("#itemClose").onclick=()=>$("#item").classList.remove("on");
+
+  async function findCheaper(m){
+    $("#itemOut").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Finding cheaper versions\u2026</div></div>`;
+    try{
+      const r=await fetch(API.find,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({imageUrl:m.thumbnail, modestyLevel:"modest", apparel:isClothing(m)})});
+      const d=await r.json(); if(!r.ok||d.error) throw 0;
+      $("#itemOut").innerHTML = (d.items&&d.items.length)? `<div class="eyebrow" style="margin:18px 0 8px">More affordable like this</div>`+grid(d.items) : `<p class="note serif">No cheaper matches found.</p>`;
+    }catch(_){ $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">This runs once the app is deployed with its keys.</p>`; }
+  }
+
+  async function styleItem(m){
+    $("#itemOut").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Styling it\u2026</div></div>`;
+    try{
+      const r=await fetch(API.style,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({imageUrl:m.thumbnail, modestyLevel:"modest", basics:basics.map(b=>b.label||"")})});
+      const d=await r.json(); if(!r.ok||d.error) throw 0;
+      const sec=(t,arr)=>`<div class="eyebrow" style="margin:16px 0 6px">${t}</div>`+(arr||[]).map(it=>`<div class="recipe"><h4>${it.piece}</h4><p>${it.why||""}</p>${it.owned?`<span class="owned">You own this \u2713</span>`:`<button class="findit" data-find="${encodeURIComponent(it.search_query||it.piece)}">Find it &#8594;</button>`}</div>`).join("");
+      $("#itemOut").innerHTML = sec("Wear under",d.under)+sec("Wear over",d.over)+(d.tips||[]).map(t=>`<div class="recipe"><p>&#9656; ${t}</p></div>`).join("");
+    }catch(_){ $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Styling loads once the app is deployed.</p>`; }
+  }
+
+  // ---------- board picker ----------
+  function openBoardPicker(m){
+    curSaveItem=m;
+    $("#bpTitle").textContent = m? "Save to board" : "New board";
+    $("#boardList").innerHTML = m? boards.map(b=>`<button class="board-pick" data-bp="${b}">${b}</button>`).join("") : "";
+    $("#newBoard").value="";
+    $("#boardList").querySelectorAll("[data-bp]").forEach(b=> b.onclick=()=>{ saveToBoard(curSaveItem, b.dataset.bp); afterSave(b.dataset.bp); });
+    $("#boardPick").classList.add("on");
+  }
+  function afterSave(board){
+    $("#boardPick").classList.remove("on");
+    if(curItem && $("#item").classList.contains("on")) $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Saved to ${board} \u2713</p>`;
+    if(document.getElementById("saved").classList.contains("active")) renderSaved();
+  }
+  $("#bpCancel").onclick=()=>$("#boardPick").classList.remove("on");
+  $("#bpCreate").onclick=()=>{ const n=$("#newBoard").value.trim(); if(!n) return; saveToBoard(curSaveItem, n); afterSave(n); };
 
   // ---------- send to phone (in-app sheet, no blocking prompt) ----------
   let sheetResolve=null;

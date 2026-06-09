@@ -1,5 +1,5 @@
-// /api/style — the "Layer Up" engine. Gemini reads the garment and returns
-// modest layering recipes (wear under / wear over) + tips, reusing her basics.
+// /api/style — "Layer Up" / styling helper. Gemini reads a garment and returns
+// modest layering recipes (under/over) + tips. Accepts imageBase64 or imageUrl.
 // Env: GEMINI_KEY (free).
 import { geminiText } from "./_gemini.js";
 
@@ -13,7 +13,13 @@ export default async function handler(req, res) {
   if (!GEMINI_KEY) return res.status(500).json({ error: "Missing GEMINI_KEY." });
 
   try {
-    const { imageBase64, mediaType = "image/jpeg", modestyLevel = "modest", basics = [] } = req.body || {};
+    let { imageBase64, mediaType = "image/jpeg", imageUrl, modestyLevel = "modest", basics = [] } = req.body || {};
+    if (!imageBase64 && imageUrl) {
+      const im = await fetch(imageUrl);
+      const buf = Buffer.from(await im.arrayBuffer());
+      imageBase64 = buf.toString("base64");
+      mediaType = im.headers.get("content-type") || "image/jpeg";
+    }
     if (!imageBase64) return res.status(400).json({ error: "No image." });
 
     const owned = basics.filter(Boolean).join(", ") || "none listed";
