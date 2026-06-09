@@ -32,7 +32,7 @@
   .appbar .date{position:absolute;right:18px;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--soft)}
 
   .wrap{max-width:680px;margin:0 auto;padding:0 18px 120px}
-  .screen{display:none;animation:rise .45s ease both;padding-bottom:108px}
+  .screen{display:none;animation:rise .45s ease both}
   .screen.active{display:block}
   @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -149,7 +149,6 @@
   .dr-card .c-add{position:absolute;bottom:6px;right:6px;width:24px;height:24px;border-radius:50%;border:none;background:var(--ink);color:#fff;font-size:15px;line-height:1;cursor:pointer}
   .dr-card .c-x{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1;cursor:pointer}
   .closet-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
-  .closet-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
   .closet-bar .act{padding:11px 6px}
 
   /* preview overlay */
@@ -415,14 +414,16 @@
   }
   const b64 = (dataUrl)=> dataUrl.split(",")[1];
 
+  // encode JSON safely for a single-quoted HTML attribute (escape the apostrophe too)
+  const eaj = (o)=> encodeURIComponent(JSON.stringify(o)).replace(/'/g,"%27");
   // ---------- product card (whole card opens the item sheet) ----------
   function card(m){
-    return `<div class="pcard" data-item='${encodeURIComponent(JSON.stringify(m))}'>
+    return `<div class="pcard" data-item='${eaj(m)}'>
       ${m.thumbnail?`<img class="ph" src="${m.thumbnail}" alt="">`:`<div class="ph"></div>`}
       <div class="brand">${m.brand||m.source||""}</div>
       <div class="pname">${m.name||"Item"}</div>
       <div class="price">${m.price||""}</div>
-      ${m._board?`<button class="card-x" data-unsave='${encodeURIComponent(JSON.stringify({url:m.url,board:m._board}))}'>&times;</button>`:''}
+      ${m._board?`<button class="card-x" data-unsave='${eaj({url:m.url,board:m._board})}'>&times;</button>`:''}
     </div>`;
   }
   function grid(items){ return `<div class="grid">${items.map(card).join("")}</div>`; }
@@ -607,7 +608,7 @@
       const items=all.filter(m=>catOf(m)===cat);
       if(!items.length) return "";
       return `<div class="dr-row"><div class="dr-row-head">${label}</div><div class="dr-row-scroll">`+
-        items.map(m=>`<div class="dr-tile ${look[cat]&&look[cat].src===m.src?'sel':''}" data-sel='${encodeURIComponent(JSON.stringify(m))}'><img src="${m.src}" alt=""><button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button><button class="c-i" data-info='${encodeURIComponent(JSON.stringify(m))}'>i</button></div>`).join("")+
+        items.map(m=>`<div class="dr-tile ${look[cat]&&look[cat].src===m.src?'sel':''}" data-sel='${eaj(m)}'><img src="${m.src}" alt=""><button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button><button class="c-i" data-info='${eaj(m)}'>i</button></div>`).join("")+
         `</div></div>`;
     }).join("");
     rows.querySelectorAll("[data-sel]").forEach(t=> t.onclick=(e)=>{ if(e.target.closest("[data-rm]")||e.target.closest("[data-info]")) return; toggleSelect(JSON.parse(decodeURIComponent(t.dataset.sel))); });
@@ -636,30 +637,36 @@
 
   function setLoading(on,txt){ $("#drLoading").classList.toggle("on",on); if(txt) $("#drLoadTxt").textContent=txt; }
 
-  async function runTryon(person, garment){
-    const key=person+"|"+garment;
+  function fashnCat(c){ return c==="dresses" ? "one-pieces" : (c==="tops"||c==="outerwear") ? "tops" : c==="bottoms" ? "bottoms" : "auto"; }
+  async function runTryon(person, garment, category){
+    const key=person+"|"+garment+"|"+(category||"auto");
     if(tryCache[key]) return tryCache[key];
-    const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({personImage:person,garmentImage:garment})});
+    const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({personImage:person,garmentImage:garment,category:category||"auto"})});
     const d=await r.json();
     if(!r.ok||d.error||!d.image){ throw new Error(d?.error || (r.status===504?"Timed out — try again.":`Error ${r.status}`)); }
     tryCache[key]=d.image; store.set("d4ne_trycache",tryCache); return d.image;
   }
   async function tryOnSingle(m){
     if(!myPhotos.length){ $("#drNote").textContent="Add a model photo first."; return; }
+    const cat=catOf(m);
+    if(cat==="shoes"){ $("#drNote").textContent="Try-on can't render shoes yet — they'll still show in your saved look."; return; }
     setLoading(true,"Dressing you… ~15s");
-    try{ currentResult=await runTryon(baseModel(), m.src); renderStage(); $("#drNote").textContent=""; }
+    try{ currentResult=await runTryon(baseModel(), m.src, fashnCat(cat)); renderStage(); $("#drNote").textContent=""; }
     catch(err){ $("#drNote").textContent=(""+err.message).slice(0,80); }
     finally{ setLoading(false); }
   }
   $("#dressMe").onclick=async ()=>{
     if(!myPhotos.length){ $("#drNote").textContent="Add a model photo first."; return; }
-    const order=SLOT_ORDER.filter(c=>look[c]).map(c=>look[c]);
-    if(!order.length) return;
+    const chosen=SLOT_ORDER.filter(c=>look[c]);
+    const usable=chosen.filter(c=>c!=="shoes"&&c!=="other");
+    const skipped=chosen.length-usable.length;
+    if(!usable.length){ $("#drNote").textContent="Try-on can't render shoes or accessories yet — add a top, bottom, or dress."; return; }
     setLoading(true,"Building your look…");
     try{
       let img=baseModel();
-      for(let i=0;i<order.length;i++){ setLoading(true,`Adding ${SLOT_LABEL[catOf(order[i])]||"piece"}… (${i+1}/${order.length})`); img=await runTryon(img, order[i].src); }
-      currentResult=img; renderStage(); $("#drNote").textContent="Your look ✓";
+      for(let i=0;i<usable.length;i++){ const c=usable[i]; setLoading(true,`Adding ${SLOT_LABEL[c]||"piece"}… (${i+1}/${usable.length})`); img=await runTryon(img, look[c].src, fashnCat(c)); }
+      currentResult=img; renderStage();
+      $("#drNote").textContent = skipped? "Your look ✓ (shoes & accessories shown in the look but not rendered yet)" : "Your look ✓";
     }catch(err){ $("#drNote").textContent=(""+err.message).slice(0,80); }
     finally{ setLoading(false); }
   };

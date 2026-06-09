@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   if (!FAL_KEY) return res.status(500).json({ error: "Missing FAL_KEY." });
 
   try {
-    const { personImage, garmentImage } = req.body || {};
+    const { personImage, garmentImage, category } = req.body || {};
     if (!personImage || !garmentImage) return res.status(400).json({ error: "Need both images." });
 
     let modelUrl = personImage, garmentUrl = garmentImage;
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model_image: modelUrl,
         garment_image: garmentUrl,
-        category: "auto",
+        category: category || "auto",
         garment_photo_type: "auto",
         mode: "quality",
         num_samples: 1,
