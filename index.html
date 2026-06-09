@@ -15,6 +15,7 @@
   :root{--bg:#ffffff;--paper:#FAFAFA;--ink:#0A0A0A;--soft:#737373;--line:#E6E6E6;--mid:#3D3D3D}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--ink);font-family:'Jost',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+  body.noscroll{overflow:hidden}
   a{color:inherit}
   img{display:block;max-width:100%}
 
@@ -155,7 +156,7 @@
   .preview{position:fixed;inset:0;z-index:85;background:rgba(255,255,255,.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
   .preview.on{display:flex}
   .preview-card{width:100%;max-width:420px;text-align:center}
-  .preview-x{position:fixed;z-index:90;top:calc(14px + env(safe-area-inset-top));right:18px;border:none;background:rgba(255,255,255,.85);border-radius:50%;width:40px;height:40px;font-size:26px;cursor:pointer;color:var(--ink);line-height:1}
+  .preview-x{position:fixed;z-index:90;top:calc(64px + env(safe-area-inset-top));right:16px;border:none;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.12);border-radius:50%;width:40px;height:40px;font-size:26px;cursor:pointer;color:var(--ink);line-height:1}
   .preview-stage{width:100%;aspect-ratio:3/4;background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden;display:flex;align-items:center;justify-content:center}
   .preview-stage img{width:100%;height:100%;object-fit:contain}
   .preview-name{font-family:'Cormorant Garamond',serif;font-size:21px;margin:16px 0 4px;line-height:1.2}
@@ -179,8 +180,9 @@
   .board-pick{text-align:left;border:1px solid var(--line);background:#fff;border-radius:2px;padding:12px 14px;font-family:'Jost',sans-serif;font-size:14px;cursor:pointer}
   .item-acts{grid-template-columns:1fr 1fr 1fr}
   .item-out{margin-top:10px;width:100%}
-  #item{align-items:flex-start;overflow-y:auto}
-  #item .preview-card{margin:56px auto;padding-bottom:120px;max-width:480px}
+  #item{z-index:45;display:none;overflow-y:auto;padding:64px 16px 96px;background:rgba(255,255,255,.97)}
+  #item.on{display:block}
+  #item .preview-card{margin:0 auto;padding-bottom:20px;max-width:480px}
   /* refined controls */
   .filter-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--ink);background:none;color:var(--ink);
     font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
@@ -359,8 +361,12 @@
   const API = { find:"/api/visual-search", shop:"/api/shopping", style:"/api/style", tryon:"/api/tryon", notify:"/api/notify" };
   // overlays + phone back-button handling
   const OVERLAYS = ["#zoom","#filter","#boardPick","#catPick","#item"];
-  function openOverlay(sel){ const e=$(sel); if(!e) return; e.classList.add("on"); history.pushState({d4ne:1},""); }
-  function closeTopOverlay(){ for(const s of OVERLAYS){ const e=$(s); if(e&&e.classList.contains("on")){ e.classList.remove("on"); return true; } } return false; }
+  const MODALS = ["#zoom","#filter","#boardPick","#catPick","#item","#sheet"];
+  function anyModalOpen(){ return MODALS.some(s=>{const e=$(s);return e&&e.classList.contains("on");}); }
+  function maybeUnlock(){ if(!anyModalOpen()) document.body.classList.remove("noscroll"); }
+  function openOverlay(sel){ const e=$(sel); if(!e) return; e.classList.add("on"); document.body.classList.add("noscroll"); history.pushState({d4ne:1},""); }
+  function closeTopOverlay(){ for(const s of OVERLAYS){ const e=$(s); if(e&&e.classList.contains("on")){ e.classList.remove("on"); maybeUnlock(); return true; } } return false; }
+  function closeAllOverlays(){ MODALS.forEach(s=>{const e=$(s); if(e) e.classList.remove("on");}); if(typeof sheetResolve!=="undefined"&&sheetResolve){ const r=sheetResolve; sheetResolve=null; r(null); } document.body.classList.remove("noscroll"); }
   window.addEventListener("popstate", ()=>{ closeTopOverlay(); });
   const SEND_TO = { name:"Shahjahan", phone:"+15877780953", email:"gilani45@gmail.com" };
   const $ = (s)=>document.querySelector(s);
@@ -392,6 +398,7 @@
   document.querySelectorAll(".tabbar button").forEach(b=>{
     b.onclick = ()=>{
       const id = b.dataset.go;
+      if(anyModalOpen()) closeAllOverlays();
       document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active", s.id===id));
       document.querySelectorAll(".tabbar button").forEach(x=>x.classList.toggle("on", x===b));
       window.scrollTo({top:0,behavior:"smooth"});
@@ -764,8 +771,8 @@
   // ---------- send to phone (in-app sheet, no blocking prompt) ----------
   let sheetResolve=null;
   function askNote(){ return new Promise(res=>{ sheetResolve=res; $("#sheetInput").value="";
-    $("#sheet").classList.add("on"); setTimeout(()=>$("#sheetInput").focus(),60); }); }
-  function closeSheet(v){ $("#sheet").classList.remove("on"); if(sheetResolve){ const r=sheetResolve; sheetResolve=null; r(v); } }
+    $("#sheet").classList.add("on"); document.body.classList.add("noscroll"); setTimeout(()=>$("#sheetInput").focus(),60); }); }
+  function closeSheet(v){ $("#sheet").classList.remove("on"); maybeUnlock(); if(sheetResolve){ const r=sheetResolve; sheetResolve=null; r(v); } }
   $("#sheetCancel").onclick=()=>closeSheet(null);
   $("#sheetSend").onclick=()=>closeSheet($("#sheetInput").value||"");
   $("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(null); });
