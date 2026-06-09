@@ -5,6 +5,7 @@
 // Optional Gemini re-rank for modesty + intent.
 // Env: SERPAPI_KEY (req), IMGBB_KEY (for base64 path), GEMINI_KEY (optional).
 import { geminiText } from "./_gemini.js";
+import { buildModestRule } from "./shopping.js";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
   if (!SERPAPI_KEY) return res.status(500).json({ error: "Missing SERPAPI_KEY." });
 
   try {
-    const { imageBase64, imageUrl, budgetMax, modestyLevel, apparel = true } = req.body || {};
+    const { imageBase64, imageUrl, budgetMax, modestyLevel, modesty, apparel = true } = req.body || {};
     let publicUrl = imageUrl || null;
 
     if (!publicUrl) {
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
 
     if (apparel && GEMINI_KEY && MODESTY_RERANK !== "off" && items.length) {
       try {
-        const ranked = await modestyRerank(items, modestyLevel, max, GEMINI_KEY);
+        const ranked = await modestyRerank(items, modesty, max, GEMINI_KEY);
         if (ranked?.length) items = ranked;
       } catch (e) { console.warn("re-rank skipped:", e.message); }
     }
@@ -67,9 +68,9 @@ export default async function handler(req, res) {
   }
 }
 
-async function modestyRerank(items, modestyLevel, max, key) {
+async function modestyRerank(items, modesty, max, key) {
   const list = items.map((m, i) => `${i}. ${m.name} | ${m.source} | ${m.price || "n/a"}`).join("\n");
-  const prompt = `These are visual-search results for clothing. Keep ONLY pieces that read as modest (good coverage of arms, legs, neckline) tuned to "${modestyLevel || "modest"}"${max ? `, priced under ${max}` : ""}, from real retailers. Drop revealing, irrelevant, or non-clothing. Return ONLY a JSON array of kept indices, best first, e.g. [3,0,7]. No other text.\n\n${list}`;
+  const prompt = `These are reverse-image-search results for a clothing item. ${buildModestRule(modesty)}${max ? ` Keep only items priced under ${max}.` : ""} Keep only real, in-stock retailer listings. Drop anything revealing, irrelevant, or non-clothing. Return ONLY a JSON array of kept indices, best/closest first, e.g. [3,0,7]. No other text.\n\n${list}`;
   const text = await geminiText([{ text: prompt }], key, 600);
   const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
   return arr.map((i) => items[i]).filter(Boolean);

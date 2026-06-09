@@ -32,7 +32,7 @@
   .appbar .date{position:absolute;right:18px;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--soft)}
 
   .wrap{max-width:680px;margin:0 auto;padding:0 18px 120px}
-  .screen{display:none;animation:rise .45s ease both}
+  .screen{display:none;animation:rise .45s ease both;padding-bottom:108px}
   .screen.active{display:block}
   @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -156,7 +156,7 @@
   .preview{position:fixed;inset:0;z-index:85;background:rgba(255,255,255,.96);display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
   .preview.on{display:flex}
   .preview-card{width:100%;max-width:420px;text-align:center}
-  .preview-x{position:absolute;top:calc(16px + env(safe-area-inset-top));right:18px;border:none;background:none;font-size:30px;cursor:pointer;color:var(--ink);line-height:1}
+  .preview-x{position:fixed;z-index:90;top:calc(14px + env(safe-area-inset-top));right:18px;border:none;background:rgba(255,255,255,.85);border-radius:50%;width:40px;height:40px;font-size:26px;cursor:pointer;color:var(--ink);line-height:1}
   .preview-stage{width:100%;aspect-ratio:3/4;background:var(--paper);border:1px solid var(--line);border-radius:3px;overflow:hidden;display:flex;align-items:center;justify-content:center}
   .preview-stage img{width:100%;height:100%;object-fit:contain}
   .preview-name{font-family:'Cormorant Garamond',serif;font-size:21px;margin:16px 0 4px;line-height:1.2}
@@ -181,7 +181,7 @@
   .item-acts{grid-template-columns:1fr 1fr 1fr}
   .item-out{margin-top:10px;width:100%}
   #item{align-items:flex-start;overflow-y:auto}
-  #item .preview-card{margin:56px auto 50px;max-width:480px}
+  #item .preview-card{margin:56px auto;padding-bottom:120px;max-width:480px}
   /* refined controls */
   .filter-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--ink);background:none;color:var(--ink);
     font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
@@ -206,6 +206,12 @@
   .dr-tile .c-x{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1;cursor:pointer}
   .cat-pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .cat-pick .board-pick{flex:1;min-width:88px;text-align:center}
+  .zoom{position:fixed;inset:0;z-index:120;background:rgba(15,13,12,.95);display:none;align-items:center;justify-content:center;padding:18px}
+  .zoom.on{display:flex}
+  .zoom img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+  .zoom-x{position:fixed;top:calc(16px + env(safe-area-inset-top));right:18px;border:none;background:none;color:#fff;font-size:34px;line-height:1;cursor:pointer;z-index:121}
+  .sheet-sub{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin:16px 0 8px}
+  .dr-modelimg{cursor:zoom-in}
   .sheet{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
   .sheet.on{display:flex}
   .sheet-card{background:#fff;width:100%;max-width:680px;border-radius:14px 14px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
@@ -256,7 +262,7 @@
       <div class="eyebrow" style="margin:34px 0 0">Browse</div>
       <button class="filter-btn" id="filterBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Filter</button>
     </div>
-    <div class="searchbar"><input id="q" placeholder="Search anything — rings, a sofa, a maxi dress&#8230;" /><button class="btn" id="qgo">Search</button></div>
+    <div class="searchbar"><input id="q" placeholder="Search fashion &amp; lifestyle&#8230;" /><button class="btn" id="qgo">Search</button></div>
     <div id="browseTag" class="browse-tag"></div>
     <div id="browseOut"></div>
   </section>
@@ -317,10 +323,14 @@
   <div class="sheet-acts"><button class="btn ghost" id="bpCancel">Cancel</button><button class="btn" id="bpCreate">Create</button></div>
 </div></div>
 
+<div id="zoom" class="zoom"><button id="zoomClose" class="zoom-x">&times;</button><img id="zoomImg" alt=""></div>
+
 <div id="filter" class="sheet"><div class="sheet-card">
   <div class="sheet-t">Filter by</div>
   <div id="filterCats" class="chips-wrap"></div>
-  <div class="sheet-acts"><button class="btn ghost" id="fClose">Close</button></div>
+  <div class="sheet-sub">Modesty</div>
+  <div id="filterMod" class="chips-wrap"></div>
+  <div class="sheet-acts"><button class="btn ghost" id="fClose">Close</button><button class="btn" id="fApply">Apply</button></div>
 </div></div>
 
 <div id="sheet" class="sheet"><div class="sheet-card">
@@ -339,6 +349,11 @@
 <script>
   // ---------- config ----------
   const API = { find:"/api/visual-search", shop:"/api/shopping", style:"/api/style", tryon:"/api/tryon", notify:"/api/notify" };
+  // overlays + phone back-button handling
+  const OVERLAYS = ["#zoom","#filter","#boardPick","#catPick","#item"];
+  function openOverlay(sel){ const e=$(sel); if(!e) return; e.classList.add("on"); history.pushState({d4ne:1},""); }
+  function closeTopOverlay(){ for(const s of OVERLAYS){ const e=$(s); if(e&&e.classList.contains("on")){ e.classList.remove("on"); return true; } } return false; }
+  window.addEventListener("popstate", ()=>{ closeTopOverlay(); });
   const SEND_TO = { name:"Shahjahan", phone:"+15877780953", email:"gilani45@gmail.com" };
   const $ = (s)=>document.querySelector(s);
 
@@ -352,6 +367,7 @@
   let boards = store.get("d4ne_boards", ["Wishlist"]);
   let closet = store.get("d4ne_closet", []);
   let openBoard = null, curItem = null, curSaveItem = null, browseCat = "";
+  let modesty = store.get("d4ne_modesty", {neck:true,sleeves:true,length:true,opaque:true,hijab:false});
   let myPhotos = store.get("d4ne_photos", []);
   // --- TEST MODEL (hard-coded). Swap these for her real photos later, or remove to go upload-only. ---
   if(!myPhotos.length){ myPhotos = ["assets/model-a.jpg","assets/model-b.jpg"]; }
@@ -422,7 +438,7 @@
     $("#homeOut").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Matching your photo across the web\u2026</div></div>`;
     try{
       const r=await fetch(API.find,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({imageBase64:b64(uploaded),mediaType:"image/jpeg",budgetMax:null,modestyLevel:"modest"})});
+        body:JSON.stringify({imageBase64:b64(uploaded),mediaType:"image/jpeg",budgetMax:null,modesty})});
       const d=await r.json(); if(!r.ok||d.error) throw 0;
       $("#homeOut").innerHTML = (d.items&&d.items.length)? grid(d.items) : `<p class="note serif">No matches yet \u2014 try a clearer photo.</p>`;
       $("#layerWrap").style.display="flex"; loadLayer("under");
@@ -463,16 +479,20 @@
   $("#qgo").onclick=()=>runShop($("#q").value, browseCat);
   $("#q").addEventListener("keydown",e=>{ if(e.key==="Enter") runShop($("#q").value, browseCat); });
   $("#filterBtn").onclick=()=>openFilter();
+  const MOD_TOGGLES=[["neck","High neckline"],["sleeves","Sleeves"],["length","Long length"],["opaque","Not sheer"],["hijab","Hijab styling"]];
   function openFilter(){
     $("#filterCats").innerHTML = FILTER_CATS.map(c=>`<button class="chip ${(c==="All"?!browseCat:browseCat===c)?'on':''}" data-fc="${c==="All"?"":c}">${c}</button>`).join("");
-    $("#filterCats").querySelectorAll("[data-fc]").forEach(b=> b.onclick=()=>{ browseCat=b.dataset.fc; $("#filter").classList.remove("on"); $("#browseTag").textContent = browseCat? browseCat : ""; runShop($("#q").value, browseCat); });
-    $("#filter").classList.add("on");
+    $("#filterCats").querySelectorAll("[data-fc]").forEach(b=> b.onclick=()=>{ browseCat=b.dataset.fc; $("#filterCats").querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x===b)); });
+    $("#filterMod").innerHTML = MOD_TOGGLES.map(([k,l])=>`<button class="chip ${modesty[k]?'on':''}" data-mod="${k}">${l}</button>`).join("");
+    $("#filterMod").querySelectorAll("[data-mod]").forEach(b=> b.onclick=()=>{ modesty[b.dataset.mod]=!modesty[b.dataset.mod]; store.set("d4ne_modesty",modesty); b.classList.toggle("on",modesty[b.dataset.mod]); });
+    openOverlay("#filter");
   }
-  $("#fClose").onclick=()=>$("#filter").classList.remove("on");
+  $("#fClose").onclick=()=>history.back();
+  $("#fApply").onclick=()=>{ history.back(); $("#browseTag").textContent = browseCat||""; runShop($("#q").value, browseCat); };
   async function runShop(q, category){
     $("#browseOut").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Finding pieces\u2026</div></div>`;
     try{
-      const r=await fetch(API.shop,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q||"", category:category||""})});
+      const r=await fetch(API.shop,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q||"", category:category||"", modesty})});
       const d=await r.json(); if(!r.ok||d.error) throw 0;
       $("#browseOut").innerHTML = (d.items&&d.items.length)? grid(d.items) : `<p class="note serif">Nothing here yet \u2014 try another search.</p>`;
     }catch(_){ $("#browseOut").innerHTML=`<p class="note serif" style="font-size:15px">Browse goes live once the app is deployed with its search key.</p>`; }
@@ -622,6 +642,8 @@
     finally{ setLoading(false); }
   };
   $("#drReset").onclick=()=>{ currentResult=null; look={}; renderRows(); renderDressBtn(); renderStage(); };
+  $("#drModelImg").onclick=()=>{ if(myPhotos.length){ $("#zoomImg").src=$("#drModelImg").src; openOverlay("#zoom"); } };
+  $("#zoomClose").onclick=()=>history.back();
 
   // uploads
   $("#addClothing").onclick=()=>$("#basicFile").click();
@@ -632,10 +654,10 @@
   function openCatPick(){
     const cats=[["tops","Top"],["bottoms","Bottom"],["dresses","Dress"],["shoes","Shoes"],["outerwear","Layer"]];
     $("#catPickBtns").innerHTML=cats.map(([k,l])=>`<button class="board-pick" data-cp="${k}">${l}</button>`).join("");
-    $("#catPickBtns").querySelectorAll("[data-cp]").forEach(b=> b.onclick=()=>{ basics.push({img:pendingUpload,label:"",cat:b.dataset.cp}); store.set("d4ne_basics",basics); pendingUpload=null; $("#catPick").classList.remove("on"); renderCloset(); });
-    $("#catPick").classList.add("on");
+    $("#catPickBtns").querySelectorAll("[data-cp]").forEach(b=> b.onclick=()=>{ basics.push({img:pendingUpload,label:"",cat:b.dataset.cp}); store.set("d4ne_basics",basics); pendingUpload=null; history.back(); renderCloset(); });
+    openOverlay("#catPick");
   }
-  $("#catCancel").onclick=()=>{ pendingUpload=null; $("#catPick").classList.remove("on"); };
+  $("#catCancel").onclick=()=>{ pendingUpload=null; history.back(); };
   $("#boardPhoto").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return; if(openBoard){ saves.unshift({name:"My photo",thumbnail:d,url:"",board:openBoard}); store.set("d4ne_saves",saves); renderSaved(); } e.target.value=""; });};
 
   // remove a piece from a board
@@ -660,7 +682,7 @@
       `<a class="btn ghost" href="${m.url||'#'}" target="_blank" rel="noreferrer">View</a>`+
       `<button class="btn" id="iSave">Save</button>`+
       `<button class="btn ghost" id="iCheap">Find cheaper</button>`+
-      (cloth?`<button class="btn ghost" id="iStyle">Style it</button>`:``)+
+      (cloth?`<button class="btn ghost" id="iStyle">Style ideas</button>`:``)+
       `<button class="btn ghost" id="iSend">Send to me</button>`+
       (cloth?`<button class="btn ghost" id="iCloset">To closet</button>`:``);
     $("#iSave").onclick=()=>openBoardPicker(m);
@@ -670,15 +692,15 @@
       $("#iStyle").onclick=()=>styleItem(m);
       $("#iCloset").onclick=()=>{ addToCloset(m); $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Added to your closet rail \u2713</p>`; };
     }
-    $("#item").classList.add("on");
+    openOverlay("#item");
   }
-  $("#itemClose").onclick=()=>$("#item").classList.remove("on");
+  $("#itemClose").onclick=()=>history.back();
 
   async function findCheaper(m){
     $("#itemOut").innerHTML=`<div class="note"><div class="spin"></div><div class="serif">Finding cheaper versions\u2026</div></div>`;
     try{
       const r=await fetch(API.find,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({imageUrl:m.thumbnail, modestyLevel:"modest", apparel:isClothing(m)})});
+        body:JSON.stringify({imageUrl:m.thumbnail, modesty, apparel:isClothing(m)})});
       const d=await r.json(); if(!r.ok||d.error) throw 0;
       $("#itemOut").innerHTML = (d.items&&d.items.length)? `<div class="eyebrow" style="margin:18px 0 8px">More affordable like this</div>`+grid(d.items) : `<p class="note serif" style="font-size:15px;margin-top:18px">Couldn't find close matches for this one — the store's preview image is too low-res to match well. Try “Find cheaper” on a different piece.</p>`;
     }catch(_){ $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px;margin-top:18px">Couldn't search right now. Make sure the app is deployed with its keys, then try again.</p>`; }
@@ -691,7 +713,7 @@
         body:JSON.stringify({imageUrl:m.thumbnail, modestyLevel:"modest", basics:basics.map(b=>b.label||"")})});
       const d=await r.json(); if(!r.ok||d.error) throw 0;
       const sec=(t,arr)=>`<div class="eyebrow" style="margin:16px 0 6px">${t}</div>`+(arr||[]).map(it=>`<div class="recipe"><h4>${it.piece}</h4><p>${it.why||""}</p>${it.owned?`<span class="owned">You own this \u2713</span>`:`<button class="findit" data-find="${encodeURIComponent(it.search_query||it.piece)}">Find it &#8594;</button>`}</div>`).join("");
-      $("#itemOut").innerHTML = sec("Wear under",d.under)+sec("Wear over",d.over)+(d.tips||[]).map(t=>`<div class="recipe"><p>&#9656; ${t}</p></div>`).join("");
+      $("#itemOut").innerHTML = `<p class="note serif" style="font-size:14px;margin:14px 0 4px">Modest ways to style this — what to layer under and over it.</p>`+sec("Wear under",d.under)+sec("Wear over",d.over)+(d.tips||[]).map(t=>`<div class="recipe"><p>&#9656; ${t}</p></div>`).join("");
     }catch(_){ $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Styling loads once the app is deployed.</p>`; }
   }
 
@@ -702,14 +724,14 @@
     $("#boardList").innerHTML = m? boards.map(b=>`<button class="board-pick" data-bp="${b}">${b}</button>`).join("") : "";
     $("#newBoard").value="";
     $("#boardList").querySelectorAll("[data-bp]").forEach(b=> b.onclick=()=>{ saveToBoard(curSaveItem, b.dataset.bp); afterSave(b.dataset.bp); });
-    $("#boardPick").classList.add("on");
+    openOverlay("#boardPick");
   }
   function afterSave(board){
-    $("#boardPick").classList.remove("on");
+    history.back();
     if(curItem && $("#item").classList.contains("on")) $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Saved to ${board} \u2713</p>`;
     if(document.getElementById("saved").classList.contains("active")) renderSaved();
   }
-  $("#bpCancel").onclick=()=>$("#boardPick").classList.remove("on");
+  $("#bpCancel").onclick=()=>history.back();
   $("#bpCreate").onclick=()=>{ const n=$("#newBoard").value.trim(); if(!n) return; saveToBoard(curSaveItem, n); afterSave(n); };
 
   // ---------- send to phone (in-app sheet, no blocking prompt) ----------

@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!SERPAPI_KEY) return res.status(500).json({ error: "Missing SERPAPI_KEY." });
 
   try {
-    let { query, category } = req.body || {};
+    let { query, category, modesty } = req.body || {};
     const base = [category, query].filter(Boolean).join(" ").trim();
     const APPAREL = /dress|top|blouse|skirt|abaya|kurta|thobe|trouser|pant|jean|blazer|cardigan|sweater|knit|coat|jacket|shirt|jumpsuit|gown|hijab|scarf|tunic|romper|kaftan|kimono|maxi|midi|outfit|clothing|wear|sleeve|cami|legging|bodysuit|co-?ord|tunic|kaftan/i;
     const apparel = category === "Clothing" || !base || APPAREL.test(base);
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
     if (GEMINI_KEY && items.length) {
       try {
-        const kept = await enforceQuery(items, q, apparel, GEMINI_KEY);
+        const kept = await enforceQuery(items, q, apparel, modesty, GEMINI_KEY);
         if (kept?.length) items = kept;
       } catch (e) { console.warn("filter skipped:", e.message); }
     }
@@ -52,13 +52,25 @@ export default async function handler(req, res) {
   }
 }
 
-async function enforceQuery(items, query, apparel, key) {
+async function enforceQuery(items, query, apparel, modesty, key) {
   const list = items.map((m, i) => `${i}. ${m.name} | ${m.source}`).join("\n");
-  const modestRule = apparel
-    ? `These are CLOTHING. Be strict on modesty: KEEP only well-covering, modest pieces (long or 3/4 sleeves or easily layerable, high neckline, full-length or maxi/midi, nothing tight, sheer, low-cut, backless, or short). DROP anything revealing, bodycon, mini, crop, strappy, or swimwear.`
-    : `These are NOT clothing — do not apply any modesty rule, just match the query.`;
+  const modestRule = apparel ? buildModestRule(modesty) : "These are NOT clothing — do not apply any modesty rule, just match the query.";
   const prompt = `A user searched for "${query}". Keep an item ONLY if it clearly matches the query (right type, and exact color if a color is named). ${modestRule} Drop mismatches and irrelevant results. Return ONLY a JSON array of kept indices, best match first, e.g. [2,0,5]. No other text.\n\n${list}`;
   const text = await geminiText([{ text: prompt }], key, 600);
   const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
   return arr.map((i) => items[i]).filter(Boolean);
+}
+
+// Shared strict modesty rule, tuned by the user's filter toggles.
+export function buildModestRule(m) {
+  m = m || {};
+  const on = (v, d) => (v === undefined ? d : v);
+  const rules = [];
+  if (on(m.neck, true)) rules.push("necklines must be high and modest — no plunging, low-cut, deep-V, off-shoulder, or cleavage-baring");
+  if (on(m.sleeves, true)) rules.push("must have sleeves — at minimum short sleeves, ideally 3/4 or long; reject sleeveless, tank, cami, halter, strapless, spaghetti-strap, or tube styles");
+  if (on(m.length, true)) rules.push("hemlines must be long — maxi, midi, ankle, or at least clearly below the knee; reject mini, micro, or above-knee");
+  if (on(m.opaque, true)) rules.push("fabric must be opaque; reject sheer, see-through, mesh, or heavily cut-out pieces");
+  if (m.hijab) rules.push("strongly prefer looks styled with a headscarf / hijab");
+  if (!rules.length) return "Keep modest, non-revealing clothing.";
+  return `These are CLOTHING. Apply modest dress strictly: ${rules.join("; ")}. EXCEPTION: if an item is clearly an outer layer meant to go over other clothes (open cardigan, blazer, kimono, abaya, duster), keep it even if worn open. Also reject bodycon/skin-tight pieces.`;
 }
