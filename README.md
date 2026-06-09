@@ -20,7 +20,7 @@ Tiny full-stack app, same shape as D(ane)ua / TheGaming.co:
 - `/api/visual-search` — photo → visual matches (Google Lens via SerpApi)
 - `/api/shopping` — text query → products (Google Shopping via SerpApi)
 - `/api/style` — Layer-Up recipes (Claude vision)
-- `/api/tryon` — virtual try-on (FASHN via fal.ai)
+- `/api/tryon` — virtual try-on (Google Gemini image model)
 - `/api/notify` — free push to Shahjahan's phone (ntfy)
 
 Saves / photos / basics are stored on-device (localStorage) so they work with zero
@@ -37,7 +37,7 @@ function, zero npm deps (Node 18+ has global fetch).
   No Supabase needed. (Prefer in-platform? Swap imgbb for Vercel Blob.)
 - **Gemini** (Layer-Up styling + result filtering): free key from
   aistudio.google.com → "Get API key". No credit card. ~1,500 req/day free.
-- **fal.ai** (`FAL_KEY`, virtual try-on, ~$0.075/image).
+- **Gemini image** (uses `GEMINI_KEY`, virtual try-on; free tier likely covers a single user, else ~$0.039/image).
 - **ntfy**: just pick a long secret topic string (no account).
 
 ## 2. Deploy on Vercel
@@ -49,7 +49,6 @@ function, zero npm deps (Node 18+ has global fetch).
    GEMINI_KEY=...                     (free, from aistudio.google.com)
    MODESTY_RERANK=on                  (set "off" to skip the Gemini pass)
    NTFY_TOPIC=d4ne-shahjahan-7f3k9q2x (long secret-ish string for phone push)
-   FAL_KEY=...                        (fal.ai, for virtual try-on ~$0.075/img)
    ```
 3. Deploy. `index.html` serves at `/`, the function at `/api/visual-search`.
 
