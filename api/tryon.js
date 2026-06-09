@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       ]);
     }
 
-    const r = await fetch("https://fal.run/fal-ai/fashn/tryon/v1.5", {
+    const r = await fetch("https://fal.run/fal-ai/fashn/tryon/v1.6", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Key ${FAL_KEY}` },
       body: JSON.stringify({
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         garment_image: garmentUrl,
         category: "auto",
         garment_photo_type: "auto",
-        mode: "balanced",
+        mode: "quality",
         num_samples: 1,
       }),
     });

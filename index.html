@@ -204,6 +204,13 @@
   .dr-tile:active{transform:scale(.95)}
   .dr-tile img{width:100%;height:100%;object-fit:contain;padding:10px;mix-blend-mode:multiply}
   .dr-tile .c-x{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1;cursor:pointer}
+  .dr-tile .c-i{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(255,255,255,.9);color:var(--ink);font-size:11px;font-style:italic;font-family:Georgia,serif;line-height:1;cursor:pointer}
+  .dr-save{position:absolute;top:12px;left:12px;display:none;border:none;background:rgba(255,255,255,.92);color:var(--ink);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:7px 12px;border-radius:999px;cursor:pointer}
+  .dr-save.on{display:block}
+  .dr-outfit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .dr-outfit{position:relative;aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:#f4f0ea;cursor:zoom-in}
+  .dr-outfit img{width:100%;height:100%;object-fit:cover;display:block}
+  .dr-outfit .c-x{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1;cursor:pointer}
   .cat-pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .cat-pick .board-pick{flex:1;min-width:88px;text-align:center}
   .zoom{position:fixed;inset:0;z-index:120;background:rgba(15,13,12,.95);display:none;align-items:center;justify-content:center;padding:18px}
@@ -281,6 +288,7 @@
       <div class="dr-empty" id="drEmpty">Add a model photo to begin</div>
       <div class="dr-loading" id="drLoading"><div class="spin light"></div><span id="drLoadTxt">Dressing…</span></div>
       <button class="dr-reset" id="drReset">Reset</button>
+      <button class="dr-save" id="drSave">&#9825; Save look</button>
     </div>
     <div class="dr-models" id="drModels"></div>
 
@@ -288,6 +296,7 @@
     <div class="dr-note" id="drNote"></div>
 
     <div id="drRows"></div>
+    <div id="drOutfits"></div>
 
     <div class="closet-bar">
       <button class="act" id="addClothing">＋ Clothing</button>
@@ -418,11 +427,12 @@
   }
   function grid(items){ return `<div class="grid">${items.map(card).join("")}</div>`; }
   function isClothing(m){ return /dress|top|blouse|skirt|abaya|kurta|thobe|trouser|pant|jean|blazer|cardigan|sweater|knit|coat|jacket|shirt|jumpsuit|gown|hijab|scarf|tunic|co-?ord| set|romper|kaftan|kimono|maxi|midi/i.test(((m.name||"")+" "+(m.brand||""))); }
+  function isWearable(m){ const s=((m.name||"")+" "+(m.brand||"")).toLowerCase(); return isClothing(m) || /shoe|heel|stiletto|boot|sneaker|runner|sandal|flip|slide|mule|wedge|espadrille|loafer|pump|trainer|footwear|clog|slipper|flat|hat|cap|beanie|beret|bag|purse|clutch|tote|belt|sunglass|glasses|watch|jewel|ring|necklace|earring|bracelet|hijab|scarf|veil|brooch/.test(s); }
 
   document.body.addEventListener("click",(e)=>{
     const c=e.target.closest(".pcard[data-item]"); if(!c) return;
     if(e.target.closest("[data-unsave]")) return;
-    openItem(JSON.parse(decodeURIComponent(c.dataset.item)));
+    try{ openItem(JSON.parse(decodeURIComponent(c.dataset.item))); }catch(err){ console.warn("card open failed", err); }
   });
 
   // ---------- HOME: find ----------
@@ -532,6 +542,7 @@
 
   // ---------- CLOSET — dressing room ----------
   let tryCache = store.get("d4ne_trycache", {});
+  let outfits = store.get("d4ne_outfits", []);
   let look = {};                 // category -> garment
   let currentResult = null;      // dressed image url (null = base model)
   let activeTab = "all";
@@ -543,7 +554,7 @@
     if(m.cat) return m.cat;
     const s=((m.meta?.name||m.name||"")+" "+(m.meta?.brand||m.brand||"")).toLowerCase();
     if(/dress|gown|abaya|kaftan|jumpsuit|romper|kurta|thobe|robe/.test(s)) return "dresses";
-    if(/shoe|heel|boot|sneaker|sandal|loafer|pump|trainer|footwear|flat\b/.test(s)) return "shoes";
+    if(/shoe|heel|stiletto|boot|sneaker|runner|sandal|flip[\s-]?flop|slide|mule|wedge|espadrille|loafer|pump|trainer|footwear|clog|slipper|flat\b/.test(s)) return "shoes";
     if(/jean|trouser|pant|skirt|legging|short|culotte|cargo|bottom/.test(s)) return "bottoms";
     if(/coat|jacket|blazer|cardigan|trench|parka|hoodie|outerwear|kimono/.test(s)) return "outerwear";
     if(/top|blouse|shirt|tee|t-shirt|sweater|knit|cami|tank|tunic|bodysuit|hijab|scarf/.test(s)) return "tops";
@@ -562,7 +573,7 @@
     renderCloset();
   }
 
-  function renderCloset(){ renderStage(); renderModels(); renderDressBtn(); renderRows(); }
+  function renderCloset(){ renderStage(); renderModels(); renderDressBtn(); renderRows(); renderOutfits(); }
 
   function renderStage(){
     const img=$("#drModelImg"), empty=$("#drEmpty");
@@ -571,6 +582,7 @@
     const src=currentResult||baseModel();
     if(img.getAttribute("src")!==src){ img.style.opacity=0; img.onload=()=>{img.style.opacity=1;}; img.src=src; }
     $("#drReset").classList.toggle("on", !!currentResult || Object.keys(look).length>0);
+    $("#drSave").classList.toggle("on", !!currentResult);
   }
   function renderModels(){
     const wrap=$("#drModels");
@@ -595,12 +607,22 @@
       const items=all.filter(m=>catOf(m)===cat);
       if(!items.length) return "";
       return `<div class="dr-row"><div class="dr-row-head">${label}</div><div class="dr-row-scroll">`+
-        items.map(m=>`<div class="dr-tile ${look[cat]&&look[cat].src===m.src?'sel':''}" data-sel='${encodeURIComponent(JSON.stringify(m))}'><img src="${m.src}" alt=""><button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button></div>`).join("")+
+        items.map(m=>`<div class="dr-tile ${look[cat]&&look[cat].src===m.src?'sel':''}" data-sel='${encodeURIComponent(JSON.stringify(m))}'><img src="${m.src}" alt=""><button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button><button class="c-i" data-info='${encodeURIComponent(JSON.stringify(m))}'>i</button></div>`).join("")+
         `</div></div>`;
     }).join("");
-    rows.querySelectorAll("[data-sel]").forEach(t=> t.onclick=(e)=>{ if(e.target.closest("[data-rm]")) return; toggleSelect(JSON.parse(decodeURIComponent(t.dataset.sel))); });
+    rows.querySelectorAll("[data-sel]").forEach(t=> t.onclick=(e)=>{ if(e.target.closest("[data-rm]")||e.target.closest("[data-info]")) return; toggleSelect(JSON.parse(decodeURIComponent(t.dataset.sel))); });
     rows.querySelectorAll("[data-rm]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); removeGarment(decodeURIComponent(b.dataset.rm)); });
+    rows.querySelectorAll("[data-info]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const g=JSON.parse(decodeURIComponent(b.dataset.info)); openItem(Object.assign({}, g.meta||{}, {thumbnail:(g.meta&&g.meta.thumbnail)||g.src})); });
   }
+  function renderOutfits(){
+    const wrap=$("#drOutfits");
+    if(!outfits.length){ wrap.innerHTML=""; return; }
+    wrap.innerHTML = `<div class="dr-row-head" style="margin-top:26px">Your outfits</div><div class="dr-outfit-grid">`+
+      outfits.map((src,i)=>`<div class="dr-outfit"><img src="${src}" data-ozoom="${i}" alt=""><button class="c-x" data-orm="${i}">&times;</button></div>`).join("")+`</div>`;
+    wrap.querySelectorAll("[data-ozoom]").forEach(im=> im.onclick=()=>{ $("#zoomImg").src=outfits[+im.dataset.ozoom]; openOverlay("#zoom"); });
+    wrap.querySelectorAll("[data-orm]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); outfits.splice(+b.dataset.orm,1); store.set("d4ne_outfits",outfits); renderOutfits(); });
+  }
+  $("#drSave").onclick=()=>{ if(currentResult && !outfits.includes(currentResult)){ outfits.unshift(currentResult); store.set("d4ne_outfits",outfits); renderOutfits(); $("#drNote").textContent="Saved to your outfits \u2713"; } };
   function toggleSelect(m){
     const cat=catOf(m);
     if(look[cat] && look[cat].src===m.src){ delete look[cat]; }
@@ -677,21 +699,19 @@
     $("#itemName").textContent=m.name||"Item";
     $("#itemPrice").textContent=m.price||"";
     $("#itemOut").innerHTML="";
-    const cloth=isClothing(m);
+    const cloth=isClothing(m), wear=isWearable(m);
     $("#itemActs").innerHTML =
       `<a class="btn ghost" href="${m.url||'#'}" target="_blank" rel="noreferrer">View</a>`+
       `<button class="btn" id="iSave">Save</button>`+
       `<button class="btn ghost" id="iCheap">Find cheaper</button>`+
       (cloth?`<button class="btn ghost" id="iStyle">Style ideas</button>`:``)+
       `<button class="btn ghost" id="iSend">Send to me</button>`+
-      (cloth?`<button class="btn ghost" id="iCloset">To closet</button>`:``);
+      (wear?`<button class="btn ghost" id="iCloset">To closet</button>`:``);
     $("#iSave").onclick=()=>openBoardPicker(m);
     $("#iCheap").onclick=()=>findCheaper(m);
     $("#iSend").onclick=()=>sendToPhone(m,null);
-    if(cloth){
-      $("#iStyle").onclick=()=>styleItem(m);
-      $("#iCloset").onclick=()=>{ addToCloset(m); $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Added to your closet rail \u2713</p>`; };
-    }
+    if(cloth) $("#iStyle").onclick=()=>styleItem(m);
+    if(wear) $("#iCloset").onclick=()=>{ addToCloset(m); $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">Added to your closet \u2713</p>`; };
     openOverlay("#item");
   }
   $("#itemClose").onclick=()=>history.back();

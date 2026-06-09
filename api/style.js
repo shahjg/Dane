@@ -25,9 +25,10 @@ export default async function handler(req, res) {
     const owned = basics.filter(Boolean).join(", ") || "none listed";
     const prompt = `You are a modest-fashion stylist. Look at this garment. Make it wearable at a "${modestyLevel}" modesty level by LAYERING, not replacing it.
 The user already owns these basics: ${owned}. When a suggestion matches something she owns, set "owned": true and reuse her exact item.
+"over" may include outerwear AND headwear when it suits the look — e.g. a hijab / headscarf, a hat, beret, or a layering scarf.
 Respond with ONLY valid JSON, no markdown:
 {"detected":"short name","under":[{"piece":"...","why":"<=12 words","owned":false,"search_query":"query if not owned"}],"over":[{"piece":"...","why":"<=12 words","owned":false,"search_query":"..."}],"tips":["tip","tip"]}
-Give 2-3 under, 2-3 over, 2 tips. Tight fields. JSON only.`;
+Give 2-3 under, 2-3 over (include at least one headwear option like a hijab or hat when appropriate), and 2 tips. Tight fields. JSON only.`;
 
     const text = await geminiText(
       [{ inline_data: { mime_type: mediaType, data: imageBase64 } }, { text: prompt }],
