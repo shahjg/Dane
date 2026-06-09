@@ -195,7 +195,18 @@
   .board-title{font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1}
   .linkback{border:none;background:none;color:var(--ink);font-size:20px;cursor:pointer;padding:4px 6px;line-height:1}
   .board-add{border:none;background:none;color:var(--soft);font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
-  .sheet{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
+  .dr-row{margin-top:20px}
+  .dr-row-head{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--soft);margin-bottom:10px}
+  .dr-row-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .dr-row-scroll::-webkit-scrollbar{display:none}
+  .dr-tile{position:relative;flex:0 0 96px;width:96px;aspect-ratio:3/4;border-radius:14px;background:#f4f0ea;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
+  .dr-tile.sel{border-color:var(--ink)}
+  .dr-tile:active{transform:scale(.95)}
+  .dr-tile img{width:100%;height:100%;object-fit:contain;padding:10px;mix-blend-mode:multiply}
+  .dr-tile .c-x{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1;cursor:pointer}
+  .cat-pick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .cat-pick .board-pick{flex:1;min-width:88px;text-align:center}
+  .sheet{position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
   .sheet.on{display:flex}
   .sheet-card{background:#fff;width:100%;max-width:680px;border-radius:14px 14px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
   @keyframes up{from{transform:translateY(100%)}to{transform:none}}
@@ -267,12 +278,10 @@
     </div>
     <div class="dr-models" id="drModels"></div>
 
-    <div class="dr-look" id="drLook"></div>
     <button class="btn block" id="dressMe">Dress me in this look</button>
     <div class="dr-note" id="drNote"></div>
 
-    <div class="dr-tabs" id="drTabs"></div>
-    <div class="dr-grid" id="drGrid"></div>
+    <div id="drRows"></div>
 
     <div class="closet-bar">
       <button class="act" id="addClothing">＋ Clothing</button>
@@ -293,6 +302,12 @@
   <div id="itemPrice" class="price" style="text-align:center"></div>
   <div class="preview-acts item-acts" id="itemActs"></div>
   <div id="itemOut" class="item-out"></div>
+</div></div>
+
+<div id="catPick" class="sheet"><div class="sheet-card">
+  <div class="sheet-t">What is it?</div>
+  <div id="catPickBtns" class="cat-pick"></div>
+  <div class="sheet-acts"><button class="btn ghost" id="catCancel">Cancel</button></div>
 </div></div>
 
 <div id="boardPick" class="sheet"><div class="sheet-card">
@@ -501,10 +516,11 @@
   let currentResult = null;      // dressed image url (null = base model)
   let activeTab = "all";
   const DR_TABS = [["all","All"],["tops","Tops"],["bottoms","Bottoms"],["dresses","Dresses"],["shoes","Shoes"],["outerwear","Outerwear"]];
-  const SLOT_ORDER = ["dresses","tops","bottoms","outerwear","shoes"];
-  const SLOT_LABEL = {tops:"Top",bottoms:"Bottom",dresses:"Dress",shoes:"Shoes",outerwear:"Layer"};
+  const SLOT_ORDER = ["dresses","tops","bottoms","outerwear","shoes","other"];
+  const SLOT_LABEL = {tops:"Top",bottoms:"Bottom",dresses:"Dress",shoes:"Shoes",outerwear:"Layer",other:"Piece"};
 
   function catOf(m){
+    if(m.cat) return m.cat;
     const s=((m.meta?.name||m.name||"")+" "+(m.meta?.brand||m.brand||"")).toLowerCase();
     if(/dress|gown|abaya|kaftan|jumpsuit|romper|kurta|thobe|robe/.test(s)) return "dresses";
     if(/shoe|heel|boot|sneaker|sandal|loafer|pump|trainer|footwear|flat\b/.test(s)) return "shoes";
@@ -516,7 +532,7 @@
   function baseModel(){ const p=myPhotos[selPhoto]; return /^(https?:|data:)/.test(p)?p:new URL(p,location.href).href; }
   function closetGarments(){ return [
     ...closet.map(c=>({src:c.src, meta:c.meta||{name:"Closet piece"}})),
-    ...basics.map(b=>({src:b.img, meta:{name:b.label||"My piece"}})),
+    ...basics.map(b=>({src:b.img, meta:{name:b.label||"My piece"}, cat:b.cat})),
   ]; }
   function addToCloset(m){ if(!closet.find(c=>c.src===m.thumbnail)){ closet.unshift({src:m.thumbnail, meta:m}); store.set("d4ne_closet",closet);} }
   function removeGarment(src){
@@ -526,7 +542,7 @@
     renderCloset();
   }
 
-  function renderCloset(){ renderStage(); renderModels(); renderLook(); renderTabs(); renderGrid(); }
+  function renderCloset(){ renderStage(); renderModels(); renderDressBtn(); renderRows(); }
 
   function renderStage(){
     const img=$("#drModelImg"), empty=$("#drEmpty");
@@ -544,42 +560,38 @@
     wrap.querySelectorAll("[data-delmodel]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); const i=+b.dataset.delmodel; myPhotos.splice(i,1); store.set("d4ne_photos",myPhotos); if(selPhoto>=myPhotos.length) selPhoto=Math.max(0,myPhotos.length-1); currentResult=null; renderCloset(); });
     $("#drAddModel").onclick=()=>$("#photoFile").click();
   }
-  function renderLook(){
-    const slots = look.dresses ? ["dresses","shoes"] : ["tops","bottoms","shoes"];
-    $("#drLook").innerHTML = slots.map(cat=>{
-      const g=look[cat];
-      return `<div class="dr-slot" data-slot="${cat}">${g?`<img src="${g.src}" alt=""><button class="slot-x" data-clear="${cat}">&times;</button>`:`<span class="slot-label">${SLOT_LABEL[cat]}</span>`}</div>`;
-    }).join("");
-    $("#drLook").querySelectorAll("[data-clear]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); delete look[b.dataset.clear]; renderLook(); renderStage(); });
+  function renderDressBtn(){
     const n=Object.keys(look).length;
     $("#dressMe").style.display = n? "block":"none";
-    $("#drNote").textContent = n>1? `${n} pieces · uses ${n} generations` : "";
+    $("#dressMe").textContent = n>1? "Dress me in this look" : "Try it on";
+    $("#drNote").textContent = n>1? `${n} pieces · uses ${n} generations` : (n===1? "1 piece · tap Try it on" : "");
   }
-  function renderTabs(){
-    $("#drTabs").innerHTML = DR_TABS.map(([k,l])=>`<button class="dr-tab ${k===activeTab?'on':''}" data-tab="${k}">${l}</button>`).join("");
-    $("#drTabs").querySelectorAll("[data-tab]").forEach(b=> b.onclick=()=>{ activeTab=b.dataset.tab; renderTabs(); renderGrid(); });
+  const ROW_ORDER=[["dresses","Dresses"],["tops","Tops"],["bottoms","Bottoms"],["outerwear","Layers"],["shoes","Shoes"],["other","Other"]];
+  function renderRows(){
+    const all=closetGarments();
+    const rows=$("#drRows");
+    if(!all.length){ rows.innerHTML=`<p class="note serif" style="text-align:center;margin-top:26px">Your wardrobe is empty. Add clothing, or save pieces from Browse.</p>`; return; }
+    rows.innerHTML = ROW_ORDER.map(([cat,label])=>{
+      const items=all.filter(m=>catOf(m)===cat);
+      if(!items.length) return "";
+      return `<div class="dr-row"><div class="dr-row-head">${label}</div><div class="dr-row-scroll">`+
+        items.map(m=>`<div class="dr-tile ${look[cat]&&look[cat].src===m.src?'sel':''}" data-sel='${encodeURIComponent(JSON.stringify(m))}'><img src="${m.src}" alt=""><button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button></div>`).join("")+
+        `</div></div>`;
+    }).join("");
+    rows.querySelectorAll("[data-sel]").forEach(t=> t.onclick=(e)=>{ if(e.target.closest("[data-rm]")) return; toggleSelect(JSON.parse(decodeURIComponent(t.dataset.sel))); });
+    rows.querySelectorAll("[data-rm]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); removeGarment(decodeURIComponent(b.dataset.rm)); });
   }
-  function renderGrid(){
-    let items=closetGarments();
-    if(activeTab!=="all") items=items.filter(m=>catOf(m)===activeTab);
-    const grid=$("#drGrid");
-    if(!items.length){ grid.innerHTML=`<p class="note serif" style="grid-column:1/-1;text-align:center;margin-top:20px">${closetGarments().length? "Nothing in this category.":"Your wardrobe is empty. Add clothing, or save pieces from Browse."}</p>`; return; }
-    grid.innerHTML = items.map((m)=>`<div class="dr-card" data-try='${encodeURIComponent(JSON.stringify(m))}'>
-      <img src="${m.src}" alt="">
-      <button class="c-x" data-rm="${encodeURIComponent(m.src)}">&times;</button>
-      <button class="c-add" data-add='${encodeURIComponent(JSON.stringify(m))}'>&#43;</button>
-    </div>`).join("");
-    grid.querySelectorAll("[data-try]").forEach(c=> c.onclick=(e)=>{ if(e.target.closest("[data-rm]")||e.target.closest("[data-add]")) return; tryOnSingle(JSON.parse(decodeURIComponent(c.dataset.try))); });
-    grid.querySelectorAll("[data-add]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); addToLook(JSON.parse(decodeURIComponent(b.dataset.add))); });
-    grid.querySelectorAll("[data-rm]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); removeGarment(decodeURIComponent(b.dataset.rm)); });
+  function toggleSelect(m){
+    const cat=catOf(m);
+    if(look[cat] && look[cat].src===m.src){ delete look[cat]; }
+    else {
+      if(cat==="dresses"){ delete look.tops; delete look.bottoms; }
+      if(cat==="tops"||cat==="bottoms"){ delete look.dresses; }
+      look[cat]=m;
+    }
+    renderRows(); renderDressBtn(); renderStage();
   }
 
-  function addToLook(m){
-    let cat=catOf(m); if(cat==="other") cat="tops";
-    if(cat==="dresses"){ delete look.tops; delete look.bottoms; }
-    if(cat==="tops"||cat==="bottoms"){ delete look.dresses; }
-    look[cat]=m; renderLook(); renderStage();
-  }
   function setLoading(on,txt){ $("#drLoading").classList.toggle("on",on); if(txt) $("#drLoadTxt").textContent=txt; }
 
   async function runTryon(person, garment){
@@ -609,13 +621,21 @@
     }catch(err){ $("#drNote").textContent=(""+err.message).slice(0,80); }
     finally{ setLoading(false); }
   };
-  $("#drReset").onclick=()=>{ currentResult=null; look={}; renderLook(); renderStage(); };
+  $("#drReset").onclick=()=>{ currentResult=null; look={}; renderRows(); renderDressBtn(); renderStage(); };
 
   // uploads
   $("#addClothing").onclick=()=>$("#basicFile").click();
   $("#addPhoto").onclick=()=>$("#photoFile").click();
   $("#photoFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;myPhotos.push(d);store.set("d4ne_photos",myPhotos);selPhoto=myPhotos.length-1;currentResult=null;renderCloset();});};
-  $("#basicFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;basics.push({img:d,label:""});store.set("d4ne_basics",basics);renderCloset();});};
+  let pendingUpload=null;
+  $("#basicFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return; pendingUpload=d; openCatPick();});};
+  function openCatPick(){
+    const cats=[["tops","Top"],["bottoms","Bottom"],["dresses","Dress"],["shoes","Shoes"],["outerwear","Layer"]];
+    $("#catPickBtns").innerHTML=cats.map(([k,l])=>`<button class="board-pick" data-cp="${k}">${l}</button>`).join("");
+    $("#catPickBtns").querySelectorAll("[data-cp]").forEach(b=> b.onclick=()=>{ basics.push({img:pendingUpload,label:"",cat:b.dataset.cp}); store.set("d4ne_basics",basics); pendingUpload=null; $("#catPick").classList.remove("on"); renderCloset(); });
+    $("#catPick").classList.add("on");
+  }
+  $("#catCancel").onclick=()=>{ pendingUpload=null; $("#catPick").classList.remove("on"); };
   $("#boardPhoto").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return; if(openBoard){ saves.unshift({name:"My photo",thumbnail:d,url:"",board:openBoard}); store.set("d4ne_saves",saves); renderSaved(); } e.target.value=""; });};
 
   // remove a piece from a board
@@ -660,8 +680,8 @@
       const r=await fetch(API.find,{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({imageUrl:m.thumbnail, modestyLevel:"modest", apparel:isClothing(m)})});
       const d=await r.json(); if(!r.ok||d.error) throw 0;
-      $("#itemOut").innerHTML = (d.items&&d.items.length)? `<div class="eyebrow" style="margin:18px 0 8px">More affordable like this</div>`+grid(d.items) : `<p class="note serif">No cheaper matches found.</p>`;
-    }catch(_){ $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px">This runs once the app is deployed with its keys.</p>`; }
+      $("#itemOut").innerHTML = (d.items&&d.items.length)? `<div class="eyebrow" style="margin:18px 0 8px">More affordable like this</div>`+grid(d.items) : `<p class="note serif" style="font-size:15px;margin-top:18px">Couldn't find close matches for this one — the store's preview image is too low-res to match well. Try “Find cheaper” on a different piece.</p>`;
+    }catch(_){ $("#itemOut").innerHTML=`<p class="note serif" style="font-size:15px;margin-top:18px">Couldn't search right now. Make sure the app is deployed with its keys, then try again.</p>`; }
   }
 
   async function styleItem(m){
