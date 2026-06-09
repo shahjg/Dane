@@ -314,6 +314,8 @@
   let closet = store.get("d4ne_closet", []);
   let openBoard = null, curItem = null, curSaveItem = null, browseCat = "";
   let myPhotos = store.get("d4ne_photos", []);
+  // --- TEST MODEL (hard-coded). Swap these for her real photos later, or remove to go upload-only. ---
+  if(!myPhotos.length){ myPhotos = ["assets/model-a.jpg","assets/model-b.jpg"]; }
   let basics = store.get("d4ne_basics", []);
   let selPhoto = 0;
   let selGarmentIdx = -1, garmentList = [], pendingGarmentSrc = null;
@@ -532,8 +534,9 @@
     const btn=$("#prevTry"); btn.disabled=true; btn.textContent="Dressing you… ~15s";
     $("#prevStage").innerHTML=`<div class="note" style="margin:0"><div class="spin"></div><div class="serif">Putting it on you…</div></div>`;
     try{
+      const person = /^(https?:|data:)/.test(myPhotos[selPhoto]) ? myPhotos[selPhoto] : new URL(myPhotos[selPhoto], location.href).href;
       const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({personImage:myPhotos[selPhoto],garmentImage:g.src})});
+        body:JSON.stringify({personImage:person,garmentImage:g.src})});
       const d=await r.json();
       if(!r.ok||d.error||!d.image){
         const why = d?.error || (r.status===504||r.status===408 ? "Timed out — the model took too long." : `Error ${r.status}`);
