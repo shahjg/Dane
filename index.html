@@ -114,19 +114,13 @@
   .tabbar button.on{color:var(--ink)}
   .tabbar svg{width:21px;height:21px}
   .tabbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase}
-  /* 3D closet */
-  .stage{position:relative;height:440px;margin-top:8px;perspective:1100px;overflow:hidden;border-bottom:1px solid var(--line)}
-  .figure{position:absolute;left:50%;top:52%;width:170px;height:300px;transform:translate(-50%,-50%);z-index:2;
-    border-radius:3px;background:var(--paper) center/cover no-repeat;box-shadow:0 30px 60px -34px rgba(0,0,0,.5);transition:opacity .3s}
-  .figure.empty{display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);color:var(--soft);font-size:12px;text-align:center;padding:14px}
-  .ring{position:absolute;left:0;right:0;top:0;bottom:0;transform-style:preserve-3d;will-change:transform}
-  .card3d{position:absolute;left:50%;top:50%;width:120px;height:168px;margin:-84px 0 0 -60px;
-    background:#fff center/cover no-repeat;border:1px solid var(--line);border-radius:3px;
-    box-shadow:0 16px 34px -20px rgba(0,0,0,.4);cursor:pointer;backface-visibility:hidden;overflow:hidden}
-  .card3d::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .2s}
-  .stage-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;
-    color:var(--soft);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;padding:30px}
-  .closet-hint{text-align:center;color:var(--soft);font-size:11px;letter-spacing:.06em;margin-top:12px}
+  /* closet */
+  .model{width:200px;height:300px;margin:14px auto 0;border-radius:4px;background:var(--paper) center/cover no-repeat;box-shadow:0 30px 60px -34px rgba(0,0,0,.5)}
+  .model.empty{display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);color:var(--soft);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px}
+  .rack-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .rack-item{aspect-ratio:3/4;border:1px solid var(--line);border-radius:3px;overflow:hidden;cursor:pointer;background:#fff}
+  .rack-item img{width:100%;height:100%;object-fit:cover;display:block}
+  .closet-hint{text-align:center;color:var(--soft);font-size:11px;letter-spacing:.06em;margin:14px 0}
   .closet-bar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
   .closet-bar .act{padding:11px 6px}
 
@@ -235,15 +229,12 @@
     <input type="file" id="boardPhoto" accept="image/*" hidden />
   </section>
 
-  <!-- CLOSET (3D rail) -->
+  <!-- CLOSET -->
   <section id="closet" class="screen">
     <div class="eyebrow">Your closet</div>
-    <div class="stage" id="stage">
-      <div class="figure" id="figure"></div>
-      <div class="ring" id="ring"></div>
-      <div class="stage-empty" id="stageEmpty"></div>
-    </div>
-    <div class="closet-hint" id="closetHint">Drag to spin · tap a piece to preview</div>
+    <div class="model" id="figure"></div>
+    <div class="closet-hint" id="closetHint">Tap a piece to try it on</div>
+    <div id="rack"></div>
     <div class="closet-bar">
       <button class="act" id="addClothing">Clothing</button>
       <button class="act" id="addPhoto">Photo</button>
@@ -491,41 +482,19 @@
   function addToCloset(m){ if(!closet.find(c=>c.src===m.thumbnail)){ closet.unshift({src:m.thumbnail, meta:m}); store.set("d4ne_closet",closet); } }
 
   function renderCloset(){
-    // center figure = her selected photo (or dressed result if cached & chosen)
     const fig = $("#figure");
     if(myPhotos.length){ fig.classList.remove("empty"); fig.style.backgroundImage=`url("${myPhotos[selPhoto]}")`; fig.textContent=""; }
-    else { fig.classList.add("empty"); fig.style.backgroundImage="none"; fig.textContent="Add a photo of yourself to stand in your closet"; }
+    else { fig.classList.add("empty"); fig.style.backgroundImage="none"; fig.textContent="Add your photo"; }
 
     ringItems = closetGarments();
-    const ring = $("#ring");
-    if(!ringItems.length){ ring.innerHTML=""; $("#stageEmpty").style.display="flex"; $("#stageEmpty").textContent="Nothing hanging yet."; $("#closetHint").style.visibility="hidden"; return; }
-    $("#stageEmpty").style.display="none"; $("#closetHint").style.visibility="visible";
+    const rack = $("#rack");
+    if(!ringItems.length){ rack.innerHTML=`<p class="note serif" style="text-align:center;margin-top:26px">Nothing hanging yet.</p>`; $("#closetHint").style.visibility="hidden"; return; }
+    $("#closetHint").style.visibility="visible";
+    rack.innerHTML = `<div class="rack-grid">`+ringItems.map((g,i)=>`<div class="rack-item" data-rack="${i}"><img src="${g.src}" alt=""></div>`).join("")+`</div>`;
+    rack.querySelectorAll("[data-rack]").forEach(el=> el.onclick=()=>openPreview(ringItems[+el.dataset.rack]));
 
-    const n = ringItems.length;
-    const radius = Math.max(220, Math.round(n*30));
-    ring.innerHTML = ringItems.map((g,i)=>{
-      const theta = i*(360/n);
-      return `<div class="card3d" data-card="${i}" style="transform:rotateY(${theta}deg) translateZ(${radius}px);background-image:url('${g.src}')"></div>`;
-    }).join("");
-    ring.dataset.radius = radius;
-    spin(ringAngle);
-
-    // if we arrived here to dress a specific saved piece, open it
     if(pendingGarmentSrc){ const g=ringItems.find(x=>x.src===pendingGarmentSrc); pendingGarmentSrc=null; if(g) openPreview(g); }
   }
-  function spin(angle){ ringAngle=angle; const r=$("#ring"); if(r) r.style.transform=`translateZ(-${r.dataset.radius||300}px) rotateY(${angle}deg)`; }
-
-  // drag to spin
-  (function(){
-    const stage=$("#stage"); let down=false, startX=0, startAngle=0, moved=0;
-    const xy=(e)=> (e.touches? e.touches[0].clientX : e.clientX);
-    stage.addEventListener("pointerdown",(e)=>{ down=true; startX=xy(e); startAngle=ringAngle; moved=0; });
-    window.addEventListener("pointermove",(e)=>{ if(!down)return; const dx=xy(e)-startX; moved=Math.max(moved,Math.abs(dx)); spin(startAngle + dx*0.4); });
-    window.addEventListener("pointerup",(e)=>{ if(!down)return; down=false;
-      const t=e.target.closest("[data-card]");
-      if(t && moved<8){ const g=ringItems[+t.dataset.card]; if(g) openPreview(g); }   // tap, not drag
-    });
-  })();
 
   // add photo / clothing / switch model
   $("#addPhoto").onclick=()=>$("#photoFile").click();
@@ -563,14 +532,18 @@
     try{
       const r=await fetch(API.tryon,{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({personImage:myPhotos[selPhoto],garmentImage:g.src})});
-      const d=await r.json(); if(!r.ok||d.error||!d.image) throw 0;
+      const d=await r.json();
+      if(!r.ok||d.error||!d.image){
+        const why = d?.error || (r.status===504||r.status===408 ? "Timed out — the model took too long." : `Error ${r.status}`);
+        throw new Error(why);
+      }
       tryCache[g.src]=d.image; store.set("d4ne_trycache",tryCache);
       $("#prevStage").innerHTML=`<img id="prevImg" src="${d.image}" alt="">`;
       btn.textContent="On you ✓ — redo";
-    }catch(_){
+    }catch(err){
       $("#prevStage").innerHTML=`<img id="prevImg" src="${g.src}" alt="">`;
-      $("#prevName").textContent="Try-on needs the FAL_KEY in Vercel.";
-      btn.textContent="Try it on";
+      $("#prevName").textContent = (""+err.message).slice(0,90) || "Try-on didn't work — try again.";
+      btn.textContent="Try again";
     } finally { btn.disabled=false; }
   }
 

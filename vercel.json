@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/tryon.js": { "maxDuration": 60 },
+    "api/visual-search.js": { "maxDuration": 30 },
+    "api/shopping.js": { "maxDuration": 30 },
+    "api/style.js": { "maxDuration": 30 }
+  }
+}
