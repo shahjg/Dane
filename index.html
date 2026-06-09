@@ -160,6 +160,19 @@
   .item-out{margin-top:10px;width:100%}
   #item{align-items:flex-start;overflow-y:auto}
   #item .preview-card{margin:56px auto 50px;max-width:480px}
+  /* refined controls */
+  .filter-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--ink);background:none;color:var(--ink);
+    font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    padding:9px 16px;border-radius:999px;cursor:pointer;margin-bottom:2px;white-space:nowrap}
+  .filter-btn svg{width:13px;height:13px}
+  .closet-bar{gap:9px}
+  .closet-bar .act{padding:12px 4px;border:1px solid var(--line);background:none;border-radius:999px;
+    font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);cursor:pointer;transition:background .15s}
+  .closet-bar .act:active{background:var(--paper)}
+  .board-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:20px 0 8px}
+  .board-title{font-family:'Cormorant Garamond',serif;font-size:24px;line-height:1}
+  .linkback{border:none;background:none;color:var(--ink);font-size:20px;cursor:pointer;padding:4px 6px;line-height:1}
+  .board-add{border:none;background:none;color:var(--soft);font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
   .sheet{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
   .sheet.on{display:flex}
   .sheet-card{background:#fff;width:100%;max-width:680px;border-radius:14px 14px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
@@ -208,7 +221,7 @@
   <section id="browse" class="screen">
     <div class="browse-head">
       <div class="eyebrow" style="margin:34px 0 0">Browse</div>
-      <button class="act" id="filterBtn">Filter</button>
+      <button class="filter-btn" id="filterBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Filter</button>
     </div>
     <div class="searchbar"><input id="q" placeholder="Search anything — rings, a sofa, a maxi dress&#8230;" /><button class="btn" id="qgo">Search</button></div>
     <div id="browseTag" class="browse-tag"></div>
@@ -217,8 +230,9 @@
 
   <!-- SAVED -->
   <section id="saved" class="screen">
-    <div class="eyebrow">Your boards</div>
+    <div class="eyebrow" id="boardsHead">Your boards</div>
     <div id="savedOut"></div>
+    <input type="file" id="boardPhoto" accept="image/*" hidden />
   </section>
 
   <!-- CLOSET (3D rail) -->
@@ -231,9 +245,9 @@
     </div>
     <div class="closet-hint" id="closetHint">Drag to spin · tap a piece to preview</div>
     <div class="closet-bar">
-      <button class="act" id="addClothing">＋ Clothing</button>
-      <button class="act" id="addPhoto">＋ Your photo</button>
-      <button class="act" id="switchModel">Switch model</button>
+      <button class="act" id="addClothing">Clothing</button>
+      <button class="act" id="addPhoto">Photo</button>
+      <button class="act" id="switchModel">Switch</button>
     </div>
     <input type="file" id="photoFile" accept="image/*" hidden />
     <input type="file" id="basicFile" accept="image/*" hidden />
@@ -267,8 +281,8 @@
 <div id="boardPick" class="sheet"><div class="sheet-card">
   <div class="sheet-t" id="bpTitle">Save to board</div>
   <div id="boardList" class="board-pick-list"></div>
-  <input id="newBoard" placeholder="+ New board name" />
-  <div class="sheet-acts"><button class="btn ghost" id="bpCancel">Cancel</button><button class="btn" id="bpCreate">Create &amp; save</button></div>
+  <input id="newBoard" placeholder="Board name" />
+  <div class="sheet-acts"><button class="btn ghost" id="bpCancel">Cancel</button><button class="btn" id="bpCreate">Create</button></div>
 </div></div>
 
 <div id="filter" class="sheet"><div class="sheet-card">
@@ -323,6 +337,7 @@
       document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active", s.id===id));
       document.querySelectorAll(".tabbar button").forEach(x=>x.classList.toggle("on", x===b));
       window.scrollTo({top:0,behavior:"smooth"});
+      const ft=document.querySelector("footer"); if(ft) ft.style.display = id==="home"? "":"none";
       if(id==="saved"){ openBoard=null; renderSaved(); }
       if(id==="closet") renderCloset();
       if(id==="browse" && !$("#browseOut").innerHTML) runShop("", browseCat);
@@ -432,6 +447,7 @@
   // ---------- BOARDS (saved) ----------
   function renderSaved(){
     const out=$("#savedOut");
+    const head=$("#boardsHead"); if(head) head.style.display = openBoard? "none":"";
     if(openBoard){ return renderBoardView(openBoard); }
     let html = `<div class="board-grid">`;
     boards.forEach(b=>{
@@ -449,10 +465,10 @@
   }
   function renderBoardView(b){
     const items=saves.filter(s=>s.board===b);
-    $("#savedOut").innerHTML = `<button class="linkback" id="boardBack">&#8592; Boards</button>
-      <div class="eyebrow" style="margin:10px 0 4px">${b}</div>` +
-      (items.length? grid(items.map(m=>({...m,_board:b}))) : `<p class="note serif">Empty board. Save something into it from Browse or Home.</p>`);
+    $("#savedOut").innerHTML = `<div class="board-bar"><button class="linkback" id="boardBack">&#8592;</button><span class="board-title">${b}</span><button class="board-add" id="boardAdd">&#43; Photo</button></div>` +
+      (items.length? grid(items.map(m=>({...m,_board:b}))) : `<p class="note serif" style="margin-top:34px">Nothing here yet.</p>`);
     $("#boardBack").onclick=()=>{ openBoard=null; renderSaved(); };
+    $("#boardAdd").onclick=()=>$("#boardPhoto").click();
   }
   function saveToBoard(m, board){
     if(!board) return;
@@ -482,7 +498,7 @@
 
     ringItems = closetGarments();
     const ring = $("#ring");
-    if(!ringItems.length){ ring.innerHTML=""; $("#stageEmpty").style.display="flex"; $("#stageEmpty").textContent="Your rail is empty. Add clothing or save pieces from Browse."; $("#closetHint").style.visibility="hidden"; return; }
+    if(!ringItems.length){ ring.innerHTML=""; $("#stageEmpty").style.display="flex"; $("#stageEmpty").textContent="Nothing hanging yet."; $("#closetHint").style.visibility="hidden"; return; }
     $("#stageEmpty").style.display="none"; $("#closetHint").style.visibility="visible";
 
     const n = ringItems.length;
@@ -517,6 +533,7 @@
   $("#switchModel").onclick=()=>{ if(myPhotos.length>1){ selPhoto=(selPhoto+1)%myPhotos.length; renderCloset(); } };
   $("#photoFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;myPhotos.push(d);store.set("d4ne_photos",myPhotos);selPhoto=myPhotos.length-1;renderCloset();});};
   $("#basicFile").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return;basics.push({img:d,label:""});store.set("d4ne_basics",basics);renderCloset();});};
+  $("#boardPhoto").onchange=(e)=>{const f=e.target.files[0];if(!f)return;fileToJpeg(f,d=>{if(!d)return; if(openBoard){ saves.unshift({name:"My photo",thumbnail:d,url:"",board:openBoard}); store.set("d4ne_saves",saves); renderSaved(); } e.target.value=""; });};
 
   // remove a piece from a board
   document.body.addEventListener("click",(e)=>{

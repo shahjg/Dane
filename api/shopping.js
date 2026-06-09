@@ -15,10 +15,15 @@ export default async function handler(req, res) {
 
   try {
     let { query, category } = req.body || {};
-    query = [category, query].filter(Boolean).join(" ").trim() || "modest dress";
+    const base = [category, query].filter(Boolean).join(" ").trim();
+    const APPAREL = /dress|top|blouse|skirt|abaya|kurta|thobe|trouser|pant|jean|blazer|cardigan|sweater|knit|coat|jacket|shirt|jumpsuit|gown|hijab|scarf|tunic|romper|kaftan|kimono|maxi|midi|outfit|clothing|wear|sleeve|cami|legging|bodysuit|co-?ord|tunic|kaftan/i;
+    const apparel = category === "Clothing" || !base || APPAREL.test(base);
+    let q = base || "dress";
+    if (apparel) q = "modest " + q;
+
     const u = new URL("https://serpapi.com/search.json");
     u.searchParams.set("engine", "google_shopping");
-    u.searchParams.set("q", query);
+    u.searchParams.set("q", q);
     u.searchParams.set("gl", "ca");
     u.searchParams.set("hl", "en");
     u.searchParams.set("api_key", SERPAPI_KEY);
@@ -35,7 +40,7 @@ export default async function handler(req, res) {
 
     if (GEMINI_KEY && items.length) {
       try {
-        const kept = await enforceQuery(items, query, GEMINI_KEY);
+        const kept = await enforceQuery(items, q, apparel, GEMINI_KEY);
         if (kept?.length) items = kept;
       } catch (e) { console.warn("filter skipped:", e.message); }
     }
@@ -47,9 +52,12 @@ export default async function handler(req, res) {
   }
 }
 
-async function enforceQuery(items, query, key) {
+async function enforceQuery(items, query, apparel, key) {
   const list = items.map((m, i) => `${i}. ${m.name} | ${m.source}`).join("\n");
-  const prompt = `A user searched for "${query}". Be strict: keep an item ONLY if it clearly matches the query (correct type and, if a color is named, the exact color). Drop mismatches and irrelevant results. IF the items are clothing/apparel, additionally drop anything revealing/immodest (keep modest, well-covering pieces). If the items are NOT clothing (e.g. jewelry, furniture, homes, cars), do not apply any modesty rule — just match the query. Return ONLY a JSON array of kept indices, best match first, e.g. [2,0,5]. No other text.\n\n${list}`;
+  const modestRule = apparel
+    ? `These are CLOTHING. Be strict on modesty: KEEP only well-covering, modest pieces (long or 3/4 sleeves or easily layerable, high neckline, full-length or maxi/midi, nothing tight, sheer, low-cut, backless, or short). DROP anything revealing, bodycon, mini, crop, strappy, or swimwear.`
+    : `These are NOT clothing — do not apply any modesty rule, just match the query.`;
+  const prompt = `A user searched for "${query}". Keep an item ONLY if it clearly matches the query (right type, and exact color if a color is named). ${modestRule} Drop mismatches and irrelevant results. Return ONLY a JSON array of kept indices, best match first, e.g. [2,0,5]. No other text.\n\n${list}`;
   const text = await geminiText([{ text: prompt }], key, 600);
   const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
   return arr.map((i) => items[i]).filter(Boolean);
