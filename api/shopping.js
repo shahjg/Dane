@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       } catch (e) { console.warn("filter skipped:", e.message); }
     }
 
-    return res.status(200).json({ count: items.length, items: items.slice(0, 12) });
+    return res.status(200).json({ count: items.length, items: items.slice(0, 40) });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Shopping search failed", detail: e.message });
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
 async function enforceQuery(items, query, key) {
   const list = items.map((m, i) => `${i}. ${m.name} | ${m.source}`).join("\n");
   const prompt = `A user searched for "${query}". Keep ONLY items that genuinely match it — same color and same garment type — and that are modest (good coverage). Drop anything off-color, wrong type, non-clothing, or revealing. Return ONLY a JSON array of kept indices, best match first, e.g. [2,0,5]. No other text.\n\n${list}`;
-  const text = await geminiText([{ text: prompt }], key, 200);
+  const text = await geminiText([{ text: prompt }], key, 600);
   const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
   return arr.map((i) => items[i]).filter(Boolean);
 }

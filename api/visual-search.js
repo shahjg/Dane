@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       } catch (e) { console.warn("re-rank skipped:", e.message); }
     }
 
-    return res.status(200).json({ count: items.length, items: items.slice(0, 8) });
+    return res.status(200).json({ count: items.length, items: items.slice(0, 40) });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: "Search failed", detail: e.message });
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
 async function modestyRerank(items, modestyLevel, max, key) {
   const list = items.map((m, i) => `${i}. ${m.name} | ${m.source} | ${m.price || "n/a"}`).join("\n");
   const prompt = `These are visual-search results for clothing. Keep ONLY pieces that read as modest (good coverage of arms, legs, neckline) tuned to "${modestyLevel || "modest"}"${max ? `, priced under ${max}` : ""}, from real retailers. Drop anything revealing, irrelevant, or non-clothing. Return ONLY a JSON array of the kept indices, best match first, e.g. [3,0,7]. No other text.\n\n${list}`;
-  const text = await geminiText([{ text: prompt }], key, 200);
+  const text = await geminiText([{ text: prompt }], key, 600);
   const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1));
   return arr.map((i) => items[i]).filter(Boolean);
 }
