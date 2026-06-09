@@ -35,7 +35,8 @@ function, zero npm deps (Node 18+ has global fetch).
 - **SerpApi** (Google Lens + Shopping): serpapi.com → copy your API key.
 - **imgbb** (hosts the snapped photo for a few minutes): api.imgbb.com → free key.
   No Supabase needed. (Prefer in-platform? Swap imgbb for Vercel Blob.)
-- **Anthropic** (Layer-Up styling + optional re-rank): an API key.
+- **Gemini** (Layer-Up styling + result filtering): free key from
+  aistudio.google.com → "Get API key". No credit card. ~1,500 req/day free.
 - **fal.ai** (`FAL_KEY`, virtual try-on, ~$0.075/image).
 - **ntfy**: just pick a long secret topic string (no account).
 
@@ -45,8 +46,8 @@ function, zero npm deps (Node 18+ has global fetch).
    ```
    SERPAPI_KEY=...
    IMGBB_KEY=...
-   ANTHROPIC_KEY=...
-   MODESTY_RERANK=on                  (set "off" to skip the Claude pass)
+   GEMINI_KEY=...                     (free, from aistudio.google.com)
+   MODESTY_RERANK=on                  (set "off" to skip the Gemini pass)
    NTFY_TOPIC=d4ne-shahjahan-7f3k9q2x (long secret-ish string for phone push)
    FAL_KEY=...                        (fal.ai, for virtual try-on ~$0.075/img)
    ```

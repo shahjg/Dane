@@ -114,6 +114,15 @@
   .tabbar button.on{color:var(--ink)}
   .tabbar svg{width:21px;height:21px}
   .tabbar span{font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+  .sheet{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center}
+  .sheet.on{display:flex}
+  .sheet-card{background:#fff;width:100%;max-width:680px;border-radius:14px 14px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
+  @keyframes up{from{transform:translateY(100%)}to{transform:none}}
+  .sheet-t{font-family:'Bebas Neue',sans-serif;font-size:23px;letter-spacing:.08em;margin-bottom:14px}
+  .sheet input{width:100%;border:1px solid var(--line);border-radius:2px;padding:13px;font-family:'Jost',sans-serif;font-size:14px;margin-bottom:14px}
+  .sheet input:focus{outline:none;border-color:var(--ink)}
+  .sheet-acts{display:flex;gap:10px}
+  .sheet-acts .btn{flex:1}
   footer{text-align:center;margin-top:46px;color:var(--soft);font-size:11px}
 </style>
 </head>
@@ -152,7 +161,7 @@
   <!-- BROWSE -->
   <section id="browse" class="screen">
     <div class="eyebrow">Browse</div>
-    <div class="searchbar"><input id="q" placeholder="Search anything — &#34;beige slip dress&#34;" /><button class="btn" id="qgo">Go</button></div>
+    <div class="searchbar"><input id="q" placeholder="Search anything — &#34;beige slip dress&#34;" /><button class="btn" id="qgo">Search</button></div>
     <div class="chips" id="cats">
       <button class="chip on" data-q="">For you</button>
       <button class="chip" data-q="modest slip dress">Slip dresses</button>
@@ -190,6 +199,12 @@
 
   <footer>For you, always.</footer>
 </div>
+
+<div id="sheet" class="sheet"><div class="sheet-card">
+  <div class="sheet-t">Send to Shahjahan</div>
+  <input id="sheetInput" placeholder="Size / colour (optional)" />
+  <div class="sheet-acts"><button class="btn ghost" id="sheetCancel">Cancel</button><button class="btn" id="sheetSend">Send</button></div>
+</div></div>
 
 <nav class="tabbar">
   <button data-go="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Home</span></button>
@@ -384,17 +399,28 @@
     }catch(_){ $("#tryout").innerHTML=`<span class="note serif">Try-on runs once the app is deployed with its key.</span>`; }
   }
 
-  // ---------- send to phone ----------
-  function sendToPhone(m, btn){
-    const note = prompt("Size / colour? (optional)") || "";
-    if(btn){ btn.textContent="Sending\u2026"; }
-    fetch(API.notify,{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({name:m.name,price:m.price,url:m.url,thumbnail:m.thumbnail,note})})
-      .then(r=>{ if(btn){ btn.textContent = r.ok ? "Sent \u2713" : "Email"; if(r.ok) btn.classList.add("on"); }
-        if(!r.ok){ const b=encodeURIComponent(`Hi ${SEND_TO.name}, could you get me this?\n\n${m.name}\n${m.price||""}\n${m.url}\n\nSize / colour: ${note}`);
-          window.location.href=`mailto:${SEND_TO.email}?subject=${encodeURIComponent("D4NE find")}&body=${b}`; } })
-      .catch(()=>{ if(btn) btn.textContent="Try again"; });
+  // ---------- send to phone (in-app sheet, no blocking prompt) ----------
+  let sheetResolve=null;
+  function askNote(){ return new Promise(res=>{ sheetResolve=res; $("#sheetInput").value="";
+    $("#sheet").classList.add("on"); setTimeout(()=>$("#sheetInput").focus(),60); }); }
+  function closeSheet(v){ $("#sheet").classList.remove("on"); if(sheetResolve){ const r=sheetResolve; sheetResolve=null; r(v); } }
+  $("#sheetCancel").onclick=()=>closeSheet(null);
+  $("#sheetSend").onclick=()=>closeSheet($("#sheetInput").value||"");
+  $("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSheet(null); });
+
+  async function sendToPhone(m, btn){
+    const note = await askNote();
+    if(note===null) return;                 // cancelled
+    if(btn) btn.textContent="Sending\u2026";
+    try{
+      const r=await fetch(API.notify,{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({name:m.name,price:m.price,url:m.url,thumbnail:m.thumbnail,note})});
+      if(r.ok){ if(btn){ btn.textContent="Sent \u2713"; btn.classList.add("on"); } }
+      else { const b=encodeURIComponent(`Hi ${SEND_TO.name}, could you get me this?\n\n${m.name}\n${m.price||""}\n${m.url}\n\nSize / colour: ${note}`);
+        window.location.href=`mailto:${SEND_TO.email}?subject=${encodeURIComponent("D4NE find")}&body=${b}`; }
+    }catch(_){ if(btn) btn.textContent="Try again"; }
   }
+
 </script>
 </body>
 </html>
